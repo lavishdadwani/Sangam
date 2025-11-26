@@ -14,7 +14,7 @@ const UserSchema = new Schema({
     },
     password:{
         type: String,
-        required: true
+        required: false
     },
     photo: {
         type: String,
@@ -43,6 +43,10 @@ const UserSchema = new Schema({
     },
     otpExpires:{
         type:Date
+    },
+    signInWith:{
+        type:String,
+        default: undefined
     }
 },{timestamps:true})
 

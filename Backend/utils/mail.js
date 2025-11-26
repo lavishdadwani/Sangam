@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer"
+import dotenv from "dotenv"
 
-
+dotenv.config()
 // Create a test account or replace with real credentials.
 const transporter = nodemailer.createTransport({
     service:"Gmail", 
@@ -12,3 +13,12 @@ const transporter = nodemailer.createTransport({
     pass: process.env.PASSWORD,
   },
 });
+
+export const sendOtpMail = async (to,otp) => {
+   await transporter.sendMail({
+    from:process.env.EMAIL,
+    to,
+    subject:"Reset Your Password",
+    html: `<p> Your OTP for Password reset is <b> ${otp} </b>. It expires in 5 min.</p>`
+   })
+}
