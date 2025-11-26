@@ -23,27 +23,31 @@ export const createItem = async (req, res) => {
       image,
     });
 
-    return res.success("Item Created Successfully.", shop);
+    return res.success("Item Created Successfully.", item);
   } catch (err) {
-    return res.error("got create shop user error", err);
+    return res.error("Got Create Item Error", err);
   }
 };
 
 export const editItem = async (req, res) => {
-    try {
-        const itemId = req.params.itemId
-      const { name, category, foodType, price } = req.body;
-      let image;
-      if (req.file) {
-        image = await uploadOnCloudinary(req.file.path);
-      }
-
-      const item = await Item.findByIdAndUpdate(itemId,{name, category, foodType, price,image},{new:true})
-      if(!item){
-        return res.error("Item not found");
-      }
-      return res.success("Item Created Successfully.", shop);
-    } catch (err) {
-      return res.error("got create shop user error", err);
+  try {
+    const itemId = req.params.itemId;
+    const { name, category, foodType, price } = req.body;
+    let image;
+    if (req.file) {
+      image = await uploadOnCloudinary(req.file.path);
     }
-  };
+
+    const item = await Item.findByIdAndUpdate(
+      itemId,
+      { name, category, foodType, price, image },
+      { new: true }
+    );
+    if (!item) {
+      return res.error("Item not found");
+    }
+    return res.success("Item Created Successfully.", shop);
+  } catch (err) {
+    return res.error("Got Edit Item  Error", err);
+  }
+};
