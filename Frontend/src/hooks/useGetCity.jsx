@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCity } from "../redux/userSlice";
+import { setCurrentAddress, setCurrentCity,setCurrentState } from "../redux/userSlice";
 import getCityName from "../../services/helpers";
 
 function useGetCity() {
@@ -19,8 +19,10 @@ function useGetCity() {
           const result = await getCityName(latitude, longitude)
           if (result) {
             const cityName = result.results[0].city
-            console.log(cityName)
-            dispatch(setCity(cityName))
+            const stateName = result.results[0].state
+            dispatch(setCurrentAddress(result.results[0].address_line2 || result.results[0].address_line1))
+            dispatch(setCurrentCity(cityName))
+            dispatch(setCurrentState(stateName))
           }
         } catch (error) {
           console.error("Error getting city name:", error)
