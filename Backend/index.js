@@ -28,11 +28,11 @@ app.response.success = function (
   message,
   data,
   displayMessage,
-  code,
+  code = 200,
   additionalData
 ) {
   console.log(chalk.green(message));
-  this.status(200).send(
+  this.status(code).send(
     Response("success", message, data, displayMessage, code, additionalData)
   );
 };

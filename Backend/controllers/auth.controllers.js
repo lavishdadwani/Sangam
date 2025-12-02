@@ -63,7 +63,7 @@ export const signUp = async (req, res) => {
     const userResponse = user.toObject();
     delete userResponse.password;
 
-    return res.status(201).json(userResponse);
+    return res.success('Sign Up Successfully.',userResponse,201)
   } catch (err) {
     console.error("Signup error:", err);
     return res

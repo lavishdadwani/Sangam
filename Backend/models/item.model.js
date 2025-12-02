@@ -42,6 +42,10 @@ const ItemSchema = new Schema(
       enum: ['veg', 'non veg'],
       require: true
     },
+    rating:{
+        average:{type: Number,default:0},
+        count:{type: Number,default:0},
+    }
   },
   { timestamps: true }
 );

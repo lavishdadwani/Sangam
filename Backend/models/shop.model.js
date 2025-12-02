@@ -16,7 +16,15 @@ const ShopSchema = new Schema({
         ref:"User",
         require:true
     },
+    items:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"Item",
+    }],
     city: {
+        type: String,
+        require:true
+    },
+    state: {
         type: String,
         require:true
     },
