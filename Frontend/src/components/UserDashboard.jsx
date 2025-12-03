@@ -7,11 +7,11 @@ import HorizontalScrollSection from "./HorizontalScrollSection";
 import FoodCard from "./FoodCard";
 
 const UserDashboard = () => {
-  const { userData, currentCity, shopsInMyCity = [], itemsInMyCIty = [] } = useSelector((state) => state.user);
+  const { userData, currentCity, shopsInMyCity = [], itemsInMyCIty = [], cartItems } = useSelector((state) => state.user);
 
   return (
     <div className="w-screen min-h-screen flex flex-col gap-5 items-center bg-[#fff9f6 overflow-y-auto">
-      <Nav userData={userData} currentCity={currentCity} />
+      <Nav userData={userData} currentCity={currentCity} cartItems={cartItems} />
 
       <HorizontalScrollSection
         title="Inspiration for your first order"

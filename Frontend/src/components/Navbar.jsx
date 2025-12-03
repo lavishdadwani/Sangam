@@ -12,7 +12,7 @@ import { FaPlus } from "react-icons/fa";
 import { TbReceipt2 } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
 
-const Nav = ({ userData, currentCity,shopData }) => {
+const Nav = ({ userData, currentCity,shopData, cartItems }) => {
   const navigate = useNavigate()
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -106,10 +106,10 @@ const Nav = ({ userData, currentCity,shopData }) => {
         ) : (
           <>
             {userData.role == "user" && (
-              <div className="relative cursor-pointer">
+              <div className="relative cursor-pointer" onClick={() => navigate("/cart")}>
                 <FiShoppingCart size={25} className="text-[#ff4d2d]" />
                 <span className="absolute right-[-9px] top-[-12px] text-[#ff4d2d]">
-                  0
+                 {cartItems.length}
                 </span>
               </div>
             )}

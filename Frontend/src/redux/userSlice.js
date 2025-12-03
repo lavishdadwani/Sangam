@@ -10,15 +10,8 @@ const userSlice = createSlice({
         currentAddress: null,
         shopsInMyCity: null,
         itemsInMyCIty: null,
-        cartItem:[{
-            id:null,
-            name:null,
-            price:null,
-            image:null,
-            shop:null,
-            quantity:null,
-            foodType:null,
-        }],
+        cartItems:[],
+        totalAmount: 0,
     },
     reducers:{
         setUserData:(state,action) =>{
@@ -41,16 +34,31 @@ const userSlice = createSlice({
         },
         addToCart:(state,action) =>{
             const cartItem = action.payload
-            const existingItem = state.cartItem.find( i => i.id == cartItem.id)
+            const existingItem = state.cartItems.find( i => i.id == cartItem.id)
             if(existingItem){
                 existingItem.quantity +=  cartItem.quantity
             }else{
-                state.cartItem.push(cartItem)
+                state.cartItems.push(cartItem)
             }
+            state.totalAmount = state.cartItems.reduce((sum,i) => sum + i.price * i.quantity, 0)
+            
+        },
+        updateQuantity:(state,action) =>{
+            const {id, quantity} = action.payload
+            const item  = state.cartItems.find( i => i.id == id)
+            if(item){
+                item.quantity = quantity
+            }
+            state.totalAmount = state.cartItems.reduce((sum,i) => sum + i.price * i.quantity, 0)
+
+        },
+        removeCartItem:(state,action) =>{
+            state.cartItems  = state.cartItems.filter( i => i.id !== action.payload)
+            state.totalAmount = state.cartItems.reduce((sum,i) => sum + i.price * i.quantity, 0)
         },
 
     }
 })
 
-export const { setUserData,setCurrentAddress, setCurrentCity, setCurrentState, setShopsInMyCity, setItemsInMyCity,addToCart } = userSlice.actions
+export const { setUserData,setCurrentAddress, setCurrentCity, setCurrentState, setShopsInMyCity, setItemsInMyCity,addToCart, updateQuantity ,removeCartItem } = userSlice.actions
 export default userSlice.reducer

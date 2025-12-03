@@ -14,6 +14,8 @@ import AddItem from './pages/AddItem'
 import EditItem from './pages/EditItem'
 import useGetShopByCity from './hooks/useGetShopByCity'
 import useGetItemByCity from './hooks/useGetItemByCIty'
+import CartPage from './pages/CartPage'
+import CheckOut from './pages/CheckOut'
 
 function App() {
   const {userData} = useSelector(state => state.user)
@@ -34,6 +36,8 @@ function App() {
         <Route path='/create-edit-shop' element={userData ? <CreateEditShop /> : <Navigate to={'/'}/>} />
         <Route path='/add-item' element={userData ? <AddItem /> : <Navigate to={'/'}/>} />
         <Route path='/edit-item/:itemId' element={userData ? <EditItem /> : <Navigate to={'/'}/>} />
+        <Route path='/cart' element={userData ? <CartPage /> : <Navigate to={'/signIn'}/>} />
+        <Route path='/checkOut' element={userData ? <CheckOut /> : <Navigate to={'/signIn'}/>} />
       </Routes>
     </>
   )
