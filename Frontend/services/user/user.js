@@ -26,6 +26,8 @@ const signUpWithGoogle = (data) => apiConfig.client.post(`user/google-auth`,data
 
 const getCurrentUser = () => apiConfig.client.get(`user/current-user`,{withCredentials:true})
 
+const updateLocation = (data) => apiConfig.client.post(`user/update-location`,data)
+
 
 export default {
     signIn,
@@ -40,5 +42,6 @@ export default {
     verifyOtp,
     resetPassword,
     signUpWithGoogle,
-    getCurrentUser
+    getCurrentUser,
+    updateLocation
 }
