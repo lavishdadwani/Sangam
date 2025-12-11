@@ -1,5 +1,5 @@
 import express from "express"
-import { getCurrentUser, googleAuth, resetPassword, sendOtp, signIn, signOut, signUp, verifyOtp } from "../controllers/auth.controllers.js"
+import { getCurrentUser, googleAuth, resetPassword, sendOtp, signIn, signOut, signUp, updateUserLocation, verifyOtp } from "../controllers/auth.controllers.js"
 import isAuth from "../middlewares/isAuth.js"
 
 const userRouter = express.Router()
@@ -12,5 +12,6 @@ userRouter.post("/verify-otp",verifyOtp)
 userRouter.post("/reset-password",resetPassword)
 userRouter.post("/google-auth",googleAuth)
 userRouter.get("/current-user",isAuth,getCurrentUser)
+userRouter.post("/update-location",isAuth,updateUserLocation)
 
 export default userRouter

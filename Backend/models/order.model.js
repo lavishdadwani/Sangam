@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 const shopOrderItemsSchema = new mongoose.Schema(
   {
-    item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
+    item: { type: mongoose.Schema.Types.ObjectId, ref: "Item",required:true },
+    name: String,
     price: Number,
     quantity: Number,
   },
@@ -19,8 +20,25 @@ const shopOrderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    subTotal: Number,
-    shopOrderItems: [],
+    subTotal:{
+        type: Number,
+        required:true
+    },
+    shopOrderItems: [shopOrderItemsSchema],
+    status:{
+        type:String,
+        enum:['pending','preparing', 'out for delivery', 'delivered'],
+        default:'pending'
+    },
+    assignment:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "DeliveryAssignment",
+        default: null
+    },
+    assignedDeliveryBoy:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }
   },
   { timestamps: true }
 );
@@ -37,14 +55,14 @@ const OrderSchema = new Schema(
       required: true,
     },
     deliveryAddress: {
-      type: String,
+      text: String,
       latitude: Number,
       longitude: Number,
     },
     totalAmount: {
       type: Number,
     },
-    shopOrder: [shopOrderSchema],
+    shopOrders: [shopOrderSchema],
   },
   { timestamps: true }
 );

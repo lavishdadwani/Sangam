@@ -8,6 +8,7 @@ import chalk from "chalk";
 import { Response } from "./models/response.model.js";
 import shopRouter from "./routes/shop.routes.js";
 import itemRouter from "./routes/item.routes.js";
+import orderRouter from "./routes/order.routes.js";
 
 dotenv.config();
 const port = process.env.PORT || 5000;
@@ -70,6 +71,7 @@ app.response.unauthorized = function (message) {
 app.use("/api/auth/user", userRouter);
 app.use("/api/auth/shop", shopRouter);
 app.use("/api/auth/item", itemRouter);
+app.use("/api/auth/order", orderRouter);
 app.get("/", async (req, res) => {
   res.status(200).json({ message: "Server is running" });
 });
