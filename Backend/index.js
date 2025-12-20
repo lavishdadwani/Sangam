@@ -1,3 +1,4 @@
+dotenv.config();
 import express from "express";
 import dotenv from "dotenv";
 import dbConnect from "./config/db.js";
@@ -9,18 +10,30 @@ import { Response } from "./models/response.model.js";
 import shopRouter from "./routes/shop.routes.js";
 import itemRouter from "./routes/item.routes.js";
 import orderRouter from "./routes/order.routes.js";
+import http from "http"
+import { Server } from "socket.io";
+import { socketHandler } from "./socket.js";
 
-dotenv.config();
 const port = process.env.PORT || 5000;
 const app = express();
+const server = http.createServer(app)
 
+const io = new Server(server,{
+    cors:{
+        origin: process.env.CLIENT_URL || "http://localhost:5173",
+        credentials: true,
+      }
+})
 // CORS configuration - use environment variable if available
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
+    methods:["POST", "GET"],
   })
 );
+
+app.set("io", io)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -90,8 +103,9 @@ app.use((err, req, res, next) => {
   });
 });
 
+socketHandler(io)
 // Start server
-app.listen(port, async () => {
+server.listen(port, async () => {
   try {
     await dbConnect();
     console.log(chalk.green(`✅ Server started at port ${port}`));
@@ -101,7 +115,7 @@ app.listen(port, async () => {
   }
 });
 
-// Graceful shutdown
+// Graceful shutdown 
 process.on("SIGTERM", () => {
   console.log(chalk.yellow("SIGTERM signal received: closing HTTP server"));
   process.exit(0);

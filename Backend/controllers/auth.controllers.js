@@ -241,3 +241,5 @@ export const updateUserLocation = async (req, res) => {
     return res.error('got error while updating location',err)
   }
 }
+
+ 

@@ -119,3 +119,71 @@ export const getItemByCity = async (req, res) => {
 
   }
 }
+
+export const getItemsByShop = async (req, res) => {
+    try {
+      const {shopId}  = req.params
+      const shop = await Shop.findById(shopId);
+      if(!shop){
+          return res.error("Shop Not Found.");
+      }
+      await shop.populate("items")
+      return res.success("Shop Details", {shop,items:shop.items})
+    } catch (err) {
+      console.error(err);
+      return res.error("Error while fetching shop", err);
+  
+    }
+  }
+export const searchItems = async (req, res) => {
+    try {
+      const {query, city}  = req.query
+      if(!query || !city){
+          return null
+      }
+      const shops = await Shop.find({city:{$regex: new RegExp(`^${city}$`,"i")}}).populate("items")
+      if (!shops) return res.error("Shops not found");
+      const shopIds = shops.map(shop => shop._id) 
+      const items = await Item.find({
+        shop:{$in:shopIds},
+        $or:[
+            {name:{$regex:query,$options:"i"}},
+            {category:{$regex:query,$options:"i"}},
+        ]
+    }).populate("shop","name image")
+
+      return res.success("Items List", items)
+    } catch (err) {
+      console.error(err);
+      return res.error("Error while fetching items", err);
+  
+    }
+  }
+
+
+  export const rating = async (req, res) => {
+    try {
+        const {itemId, rating} = req.body
+        if(!itemId || !rating){
+            return res.error("Item/ rating is required");
+        }
+        if(rating < 1 || rating > 5){
+            return res.error("Rating must be between 1 to 5");
+        }
+        const item = await Item.findById(itemId)
+        if(!item){
+            return res.error("Item not found");
+        }
+        const newCount = item.rating.count + 1
+        const newAverage = (item.rating.average * item.rating.count + rating) / newCount
+        item.rating.count = newCount
+        item.rating.average = newAverage
+        await item.save()
+        return res.success("Rating Updated successfully", {rating:item.rating})
+
+    } catch (err) {
+      console.error(err);
+      return res.error("Error while rating items", err);
+
+    }
+  }

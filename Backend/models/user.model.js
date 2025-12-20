@@ -49,6 +49,13 @@ const UserSchema = new Schema(
       type: String,
       default: undefined,
     },
+    socketId:{
+        type: String
+    },
+    isOnline:{
+        type: Boolean,
+        default: false
+    },
     location: {
       type: {
         type: String,
