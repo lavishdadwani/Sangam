@@ -24,7 +24,7 @@ const RecenterMap = ({location}) =>{
 }
 const CheckOut = () => {
     const {location, address} = useSelector(state => state.map)
-    const {cartItems,totalAmount} = useSelector(state => state.user)
+    const {cartItems,totalAmount, userData} = useSelector(state => state.user)
     const [addressInput, setAddressInput] = useState("")
     const [paymentMethod, setPaymentMethod] = useState("cod")
     const [loading, setLoading] = useState(false)
@@ -59,21 +59,10 @@ const CheckOut = () => {
     }
 
     const getCurrentLocation = () =>{
-        navigator.geolocation.getCurrentPosition( 
-            async (position) => {
-              try {
-                const latitude = position.coords.latitude
-                const longitude = position.coords.longitude
+                const latitude = userData.location.coordinates[1]
+                const longitude = userData.location.coordinates[0]
                 dispatch(setLocation({lat:latitude,lng:longitude}))
                 getAddressLatLng(latitude,longitude)
-              } catch (error) {
-                console.error("Error getting city name:", error)
-              }
-            },
-            (error) => {
-              console.error("Error getting location:", error)
-            }
-          )
     }
 
     const  getLatLngByAddress = async () =>{
@@ -104,17 +93,23 @@ const CheckOut = () => {
                 latitude:location.lat,
                 longitude:location.lng
             },
-            totalAmount,
+            totalAmount:AmountWithDeliveryFee,
             cartItems
         }
         const result = await OrderApi.create(data) ;
-    
+
+
         if (result.ok) {
-        //   dispatch(setUserData(result.data.data));
-          dispatch(openSnackbar("Order Created Successfully", "success"));
-          console.log(result.data);
-          dispatch(addMyOrder(result.data.data))
-          navigate("/order-placed")
+            if(paymentMethod == "cod"){
+                //   dispatch(setUserData(result.data.data));
+                  dispatch(openSnackbar("Order Created Successfully", "success"));
+                  dispatch(addMyOrder(result.data.data))
+                  navigate("/order-placed")
+            }else{
+                const orderId = result.data.data.orderId
+                const razorOrder = result.data.data.razorOrder
+                openRazorPayWIndow(orderId, razorOrder)
+            }
         } else {
           dispatch(openSnackbar(result.data?.message || "Failed to create order", "error"));
         }
@@ -125,6 +120,39 @@ const CheckOut = () => {
         dispatch(openSnackbar(err.message, "error"));
       }
     }
+
+    const openRazorPayWIndow = (orderId, razorOrder)=>{
+        try{
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_API_KEY,
+                amount: razorOrder.amount,
+                currency: "INR",
+                name: "sangam",
+                description: "Food Delivery website",
+                order_id:razorOrder.id,
+                handler: async function (response){
+                    try{
+                        const result = await OrderApi.verifyPayment({
+                            razorpay_payment_id:response.razorpay_payment_id,
+                            orderId
+                        })
+                        if (result.ok) {
+                            dispatch(openSnackbar("Order Created Successfully", "success"));
+                            dispatch(addMyOrder(result.data.data))
+                            navigate("/order-placed")
+                        }
+                    }catch(err){
+                        console.log(err);
+                    }
+                } 
+            }
+            const rzp = new window.Razorpay(options)
+            rzp.open()
+        }catch(err){
+            console.log(err); 
+        }
+    }
+ 
   return (
     <div className="min-h-screen bg-[#fff9f6] flex items-center justify-center p-6">
       <div

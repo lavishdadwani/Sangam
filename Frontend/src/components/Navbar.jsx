@@ -1,23 +1,43 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaLocationDot } from "react-icons/fa6";
 import { IoIosSearch } from "react-icons/io";
 import { FiShoppingCart } from "react-icons/fi";
 import { RxCross2 } from "react-icons/rx";
 import { useDispatch } from "react-redux";
-import { setUserData } from "../redux/userSlice";
+import { setSearchItems, setUserData } from "../redux/userSlice";
 import { clearOwnerData } from "../redux/ownerSlice";
 import userAPI from "../../services/user/user";
 import { openSnackbar } from "../redux/snackbarSlice";
 import { FaPlus } from "react-icons/fa";
 import { TbReceipt2 } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
+import itemAPI from "../../services/item"
 
-const Nav = ({ userData, currentCity,shopData, cartItems }) => {
+const Nav = ({ userData, currentCity,shopData, cartItems = [] }) => {
   const navigate = useNavigate()
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [query, setQuery] = useState('');
+  const infoRef = useRef(null);
   const dispatch = useDispatch();
   if (!userData) return null;
+
+  // Close info panel whenever the logged-in user changes (e.g., switching accounts/roles)
+  useEffect(() => {
+    setShowInfo(false);
+  }, [userData]);
+
+  // Close info panel when clicking outside
+  useEffect(() => {
+    if (!showInfo) return;
+    const handleClickOutside = (e) => {
+      if (infoRef.current && !infoRef.current.contains(e.target)) {
+        setShowInfo(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showInfo]);
   const handleLogOut = async () => {
     try {
       const result = await userAPI.signOut();
@@ -29,6 +49,31 @@ const Nav = ({ userData, currentCity,shopData, cartItems }) => {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    if(query){
+      handleSearchItems(query)
+    }else{
+      dispatch(setSearchItems(null));
+    }
+  }, [query]);
+
+  const handleSearchItems = async (query) => {
+    try {
+      const result = await itemAPI.searchItems(query,currentCity) ;
+  
+      if (result.ok) {
+        dispatch(setSearchItems(result.data.data));
+      } else {
+        dispatch(openSnackbar(result.data?.message || "Failed to sign in", "error"));
+      }
+  
+    } catch (err) {
+      console.error(err);
+      dispatch(openSnackbar(err.message, "error"));
+    }
+  }
+
   return (
     <div className="w-full h-[80px] flex items-center justify-between md:justify-between gap-[30px] px-[20px] fixed top-0 z-[999] bg-[#fff9f6] overflow-visible">
       {showSearch && userData.role == "user" && (
@@ -43,6 +88,8 @@ const Nav = ({ userData, currentCity,shopData, cartItems }) => {
               type="text"
               placeholder="Search grocery items..."
               className="px-[10px] text-gray-700 outline-0 w-full"
+              onChange={(e)=> setQuery(e.target.value)}
+              value={query}
             />
           </div>
         </div>
@@ -60,6 +107,8 @@ const Nav = ({ userData, currentCity,shopData, cartItems }) => {
               type="text"
               placeholder="Search grocery items..."
               className="px-[10px] text-gray-700 outline-0 w-full"
+              onChange={(e)=> setQuery(e.target.value)}
+              value={query}
             />
           </div>
         </div>
@@ -113,34 +162,36 @@ const Nav = ({ userData, currentCity,shopData, cartItems }) => {
                 </span>
               </div>
             )}
-            <button className="hidden md:block px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] text-sm font-medium" onClick={()=> navigate("my-orders")}>
+            <button className="hidden md:block px-3 py-1 rounded-lg bg-[#ff4d2d]/10 text-[#ff4d2d] text-sm font-medium cursor-pointer" onClick={()=> navigate("my-orders")}>
               My Orders
             </button>
           </>
         )}
 
-        <div
-          className="w-[40px] h-[40px] rounded-full flex items-center justify-center bg-[#ff4d2d] text-white text[18px] shadow-xl font-semibold cursor-pointer"
-          onClick={() => setShowInfo((prev) => !prev)}
-        >
-          {userData?.fullName?.slice(0, 1) || "U"}
-        </div>
-        {showInfo && (
-          <div className="fixed top-[80px] right-[10px] md:right-[10%] lg:right-[25%] w-[180px] bg-white shadow-2xl rounded-xl p-[20px] flex flex-col gap-[10px] z-[9999]">
-            <div className="text-[17px] font-semibold">
-              {userData?.fullName || "User"}
-            </div>
-           {userData.role == "user" &&  <div className=" md:hidden text-[#ff4d2d] font-semibold cursor-pointer" onClick={()=> navigate("my-orders")}>
-              My Orders
-            </div>}
-            <div
-              className="text-[#ff4d2d] font-semibold cursor-pointer"
-              onClick={handleLogOut}
-            >
-              Log Out
-            </div>
+        <div className="relative" ref={infoRef}>
+          <div
+            className="w-[40px] h-[40px] rounded-full flex items-center justify-center bg-[#ff4d2d] text-white text[18px] shadow-xl font-semibold cursor-pointer"
+            onClick={() => setShowInfo((prev) => !prev)}
+          >
+            {userData?.fullName?.slice(0, 1) || "U"}
           </div>
-        )}
+          {showInfo && (
+            <div className="absolute right-0 mt-2 w-[200px] bg-white shadow-2xl rounded-xl p-[16px] flex flex-col gap-[10px] z-[9999]">
+              <div className="text-[17px] font-semibold">
+                {userData?.fullName || "User"}
+              </div>
+            {userData.role == "user" &&  <div className=" md:hidden text-[#ff4d2d] font-semibold cursor-pointer" onClick={()=> navigate("my-orders")}>
+                My Orders
+              </div>}
+              <div
+                className="text-[#ff4d2d] font-semibold cursor-pointer"
+                onClick={handleLogOut}
+              >
+                Log Out
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

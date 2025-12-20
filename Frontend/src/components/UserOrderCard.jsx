@@ -1,8 +1,27 @@
 import moment from 'moment'
-import React from 'react'
+import React, { useState } from 'react'
 import ButtonSquare from './ButtonSquare'
-
+import { useNavigate } from 'react-router-dom'
+import ItemAPI from "../../services/item"
 const UserOrderCard = ({data}) => {
+    const [selectedRating, setSelectedRating] = useState({})
+    const navigate = useNavigate()
+
+    const handleRating = async (itemId,rating) => {
+      try {
+        const result = await  ItemAPI.rating({itemId,rating});
+        if (result.ok) {
+          setSelectedRating(prev => ({...prev,[itemId]:rating}))
+        //   dispatch(openSnackbar("Signed in successfully", "success"));
+        } else {
+          dispatch(openSnackbar(result.data?.message || "Failed to sign in", "error"));
+        }
+    
+      } catch (err) {
+        console.error(err);
+        dispatch(openSnackbar(err.message, "error"));
+      }
+    }
   return (
     <div className='bg-white rounded-lg shadow p-4 space-y-4'>
       <div className='flex justify-between border-b pb-2'>
@@ -15,7 +34,9 @@ const UserOrderCard = ({data}) => {
             </p>
         </div>
         <div className='text-right'>
-            <p className='text-sm text-gray-500'>{data.paymentMethod?.toUpperCase()}</p>
+            {data.paymentMethod == "cod" ? <p className='text-sm text-gray-500'>{data.paymentMethod?.toUpperCase()}</p> :(
+                <p className='text-sm text-gray-500'>Payment: {data.payment ? "True" : "False"}</p>
+            )}
             <p className='font-medium text-blue-600'>{data.shopOrders[0].status}</p>
         </div>
       </div>
@@ -29,7 +50,13 @@ const UserOrderCard = ({data}) => {
                         <img src={item.item.image} alt="" className='w-full h-24 object-cover rounded'/>
                         <p className='text-sm font-semibold mt-1'>{item.name}</p>
                         <p className='text-xs text-gray-500'>Qty:{item.quantity} X  ₹{item.price}</p>
-
+                        {shopOrder.status == "delivered" && (
+                            <div className='flex space-x-1 mt-2'>
+                                {[1,2,3,4,5].map((star) =>(
+                                    <button className={`text-lg ${selectedRating[item.item._id] >= star ? "text-yellow-400" : "text-gray-400"}`} onClick={() => handleRating(item.item._id,star)} >★</button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                 ))}
@@ -42,7 +69,7 @@ const UserOrderCard = ({data}) => {
       ))}
       <div className='flex justify-between items-center border-t pt-2'>
         <p className='font-semibold'>Total: {data.totalAmount}</p>
-        <ButtonSquare>Track Order </ButtonSquare>
+        <ButtonSquare onClick={()=> navigate(`/track-order/${data._id}`)}>Track Order </ButtonSquare>
       </div>
     </div>
   )
