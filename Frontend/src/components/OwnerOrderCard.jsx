@@ -4,7 +4,8 @@ import OrderAPI from "../../services/order";
 import { useDispatch } from "react-redux";
 import { openSnackbar } from "../redux/snackbarSlice";
 import { updateOrderStatus } from "../redux/userSlice";
-import { ORDER_STATUSES, getOrderStatusLabel } from "../constants/orderStatus";
+import { ORDER_STATUSES, OWNER_SELECTABLE_STATUSES, getOrderStatusLabel, getNextAvailableStatuses, canChangeStatus } from "../constants/orderStatus";
+import StatusBadge from "./StatusBadge";
 
 const OwnerOrderCard = ({ data }) => {
   const dispatch = useDispatch();
@@ -40,10 +41,16 @@ const OwnerOrderCard = ({ data }) => {
 
   const onUpdateStatusChange = (e) => {
     const status = e.target.value;
+    if (!status) return; // Don't process if "Change" option is selected
     handleUpdateStatus(data?._id, data?.shopOrders?.shop?._id, status);
   };
 
-  const currentStatusLabel = getOrderStatusLabel(data?.shopOrders?.status);
+  const currentStatus = data?.shopOrders?.status;
+  const isStatusLocked = !canChangeStatus(currentStatus);
+
+  // Get current status order for comparison (using owner-selectable statuses)
+  const currentStatusObj = OWNER_SELECTABLE_STATUSES.find((s) => s.value === currentStatus) || ORDER_STATUSES.find((s) => s.value === currentStatus);
+  const currentOrder = currentStatusObj?.order || 0;
 
   return (
     <div className="bg-white rounded-lg shadow p-4 space-y-4">
@@ -92,26 +99,34 @@ const OwnerOrderCard = ({ data }) => {
       </div>
 
       <div className="flex justify-between items-center mt-auto pt-3 border-t border-gray-100">
-        <span className="text-sm">
-          {" "}
-          status:{" "}
-          <span className="font-semibold capitalize text-[#ff4d2d]">
-            {currentStatusLabel}
-          </span>
-        </span>
-        <select
-          className="rounded-md border px-3 py-1 text-sm focus:outline-none focus:ring-2 border-[#ff4d2d] text-[#ff4d2d]"
-          onChange={onUpdateStatusChange}
-          disabled={updating}
-          defaultValue=""
-        >
-          <option value="">Change</option>
-          {ORDER_STATUSES.map((status) => (
-            <option key={status.value} value={status.value}>
-              {status.label}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Status:</span>
+          <StatusBadge status={currentStatus} />
+        </div>
+        {!isStatusLocked && (
+          <select
+            className="rounded-md border px-3 py-1 text-sm focus:outline-none focus:ring-2 border-[#ff4d2d] text-[#ff4d2d] bg-white font-medium"
+            onChange={onUpdateStatusChange}
+            disabled={updating}
+            value={currentStatus || ""}
+          >
+            {OWNER_SELECTABLE_STATUSES.map((status) => {
+              const isPrevious = status.order < currentOrder;
+              const isCurrent = status.value === currentStatus;
+              const isDisabled = isPrevious || isCurrent;
+              
+              return (
+                <option 
+                  key={status.value} 
+                  value={status.value}
+                  disabled={isDisabled}
+                >
+                  {isCurrent ? `Current: ${status.label}` : status.label}
+                </option>
+              );
+            })}
+          </select>
+        )}
       </div>
 
     {/* DELIVERY BOYS */}

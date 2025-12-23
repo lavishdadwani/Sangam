@@ -1,13 +1,14 @@
 import React, { useEffect } from "react";
-import { IoIosArrowRoundBack } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import UserOrderCard from "../components/UserOrderCard";
 import OwnerOrderCard from "../components/OwnerOrderCard";
 import { FaShoppingBag } from "react-icons/fa";
 import { TbReceipt2 } from "react-icons/tb";
-import ButtonSquare from "../components/ButtonSquare";
 import { setMyOrders, updateRealtimeOrderStatus } from "../redux/userSlice";
+import PageHeader from "../components/PageHeader";
+import EmptyState from "../components/EmptyState";
+import AnimatedCard from "../components/AnimatedCard";
 
 const MyOrders = () => {
   const { userData, myOrders, socket } = useSelector((state) => state.user);
@@ -31,62 +32,49 @@ const MyOrders = () => {
     }
   }, [socket]);
 
+  const ordersCount = myOrders?.length || 0;
+
   return (
-    <div className="w-full min-h-screen bg-[#fff9f6] flex justify-center px-4">
-      <div className="w-full max-w-[800px] p-4">
-        <div className="flex items-center gap-[20px] mb-6">
-          <div className="z-[10] cursor-pointer" onClick={() => navigate("/")}>
-            <IoIosArrowRoundBack size={35} className="text-[#ff4d2d]" />
-          </div>
-          <h1 className="text-2xl font-bold text-start">My Orders</h1>
-        </div>
-        <div className="space-y-6">
+    <div className="w-full min-h-screen bg-[#fff9f6] flex justify-center px-4 pt-24 pb-12">
+      <div className="w-full max-w-[900px] p-4 md:p-6">
+        <PageHeader
+          title="My Orders"
+          subtitle={ordersCount > 0 ? `${ordersCount} ${ordersCount === 1 ? 'order' : 'orders'} ${userData.role === "user" ? "placed" : "received"}` : null}
+          rightContent={ordersCount > 0 ? (
+            <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-[#ff4d2d]/10 text-[#ff4d2d] font-bold text-lg shadow-md">
+              {ordersCount}
+            </div>
+          ) : null}
+        />
+
+        {/* Orders List */}
+        <div className="space-y-6 md:space-y-8">
             {myOrders && myOrders.length > 0 ? (
-                myOrders.map((order,index) =>(
-                    userData.role == "user" ? (
-                        <UserOrderCard data={order} key={index} />
-                    ) : userData.role == "owner" ? (
-                        <OwnerOrderCard data={order} key={index} />
-                    ) : null
-                ))
+                <>
+                  {myOrders.map((order,index) =>(
+                      <AnimatedCard
+                        key={order._id || index}
+                        index={index}
+                        delay={80}
+                      >
+                        {userData.role == "user" ? (
+                            <UserOrderCard data={order} />
+                        ) : userData.role == "owner" ? (
+                            <OwnerOrderCard data={order} />
+                        ) : null}
+                      </AnimatedCard>
+                  ))}
+                </>
             ) : (
-                <div className="flex flex-col items-center justify-center py-16 px-4">
-                    <div className="flex flex-col items-center justify-center gap-6 max-w-md">
-                        {/* Icon Container */}
-                        <div className="bg-gradient-to-br from-orange-100 to-orange-50 rounded-full p-8 shadow-lg">
-                            {userData.role == "user" ? (
-                                <FaShoppingBag className="text-[#ff4d2d] text-6xl" />
-                            ) : (
-                                <TbReceipt2 className="text-[#ff4d2d] text-6xl" />
-                            )}
-                        </div>
-                        
-                        {/* Message */}
-                        <div className="text-center space-y-2">
-                            <h2 className="text-2xl font-bold text-gray-800">
-                                {userData.role == "user" 
-                                    ? "No Orders Yet" 
-                                    : "No Orders Received"}
-                            </h2>
-                            <p className="text-gray-500 text-base leading-relaxed">
-                                {userData.role == "user" 
-                                    ? "You haven't placed any orders yet. Start shopping to see your orders here!" 
-                                    : "You haven't received any orders yet. Once customers place orders, they'll appear here."}
-                            </p>
-                        </div>
-                        
-                        {/* Action Button for Users */}
-                        {userData.role == "user" && (
-                            <ButtonSquare
-                                styleType="default"
-                                onClick={() => navigate("/")}
-                                className="mt-4 px-6 py-3 shadow-md hover:shadow-lg"
-                            >
-                                Start Shopping
-                            </ButtonSquare>
-                        )}
-                    </div>
-                </div>
+                <EmptyState
+                  icon={userData.role === "user" ? FaShoppingBag : TbReceipt2}
+                  title={userData.role === "user" ? "No Orders Yet" : "No Orders Received"}
+                  description={userData.role === "user" 
+                    ? "You haven't placed any orders yet. Start shopping to see your orders here!" 
+                    : "You haven't received any orders yet. Once customers place orders, they'll appear here."}
+                  buttonText={userData.role === "user" ? "Start Shopping" : null}
+                  buttonRoute={userData.role === "user" ? "/" : null}
+                />
             )}
         </div>
       </div>

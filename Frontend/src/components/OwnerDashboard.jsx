@@ -6,13 +6,13 @@ import { useNavigate } from "react-router-dom";
 import OwnerItemCard from "./OwnerItemCard";
 const OwnerDashboard = () => {
   const navigate = useNavigate();
-  const { userData, currentCity } = useSelector((state) => state.user);
+  const { userData, currentCity, myOrders } = useSelector((state) => state.user);
   const { shopData } = useSelector((state) => state.owner);
 
 
   return (
     <div className="w-full min-h-screen  flex flex-col items-center">
-      <Nav userData={userData} currentCity={currentCity} shopData={shopData} />
+      <Nav userData={userData} currentCity={currentCity} shopData={shopData} myOrders={myOrders} />
       {!shopData && (
         <div className="flex justify-center items-center p-4 sm:p-6 mt-20">
           <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 border border-gary-100 hover:shadow-xl transition-shadow duration-300">

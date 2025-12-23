@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import itemAPI from "../../services/item"
 
 const UserDashboard = () => {
-  const { userData, currentCity, shopsInMyCity = [], itemsInMyCity = [], cartItems, searchItems } = useSelector((state) => state.user);
+  const { userData, currentCity, shopsInMyCity = [], itemsInMyCity = [], cartItems, searchItems, myOrders } = useSelector((state) => state.user);
 
   const [updatedItemsList, setUpdatedItemsList] = useState([])
   const navigate = useNavigate()
@@ -28,7 +28,7 @@ const UserDashboard = () => {
 
   return (
     <div className="w-screen min-h-screen flex flex-col gap-5 items-center bg-[#fff9f6 overflow-y-auto">
-      <Nav userData={userData} currentCity={currentCity} cartItems={cartItems} />
+      <Nav userData={userData} currentCity={currentCity} cartItems={cartItems} myOrders={myOrders} />
       {searchItems && searchItems.length > 0 && (
         <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-5 bg-white shadow-md rounded-2xl mt-4">
             <h1 className="text-gray-900 text-2xl sm:text-3xl font-semibold border-b border-gray-200 pb-2">

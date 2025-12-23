@@ -1,12 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FaDrumstickBite, FaLeaf, FaStar, FaRegStar, FaMinus, FaPlus, FaShoppingCart } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
-import { addToCart } from '../redux/userSlice'
+import { addToCart, updateQuantity, removeCartItem } from '../redux/userSlice'
 
 const FoodCard = ({data}) => {
   const  dispatch = useDispatch()
   const  {cartItems} = useSelector(state => state.user) 
   const [quantity, setQuantity] = useState(0)
+  
+  // Check if item exists in cart and sync quantity
+  useEffect(() => {
+    const cartItem = cartItems.find(item => item.id === data._id)
+    if (cartItem) {
+      setQuantity(cartItem.quantity)
+    } else {
+      setQuantity(0)
+    }
+  }, [cartItems, data._id])
+
   const renderStars = (rating) =>{
     const stars = [];
     for (let i = 1; i <= 5; i++){
@@ -17,14 +28,32 @@ const FoodCard = ({data}) => {
     return stars
   }
 
+  const isInCart = cartItems.some(item => item.id === data._id)
+
   const handleIncrease = () =>{
-    const  newQty = quantity + 1
+    const newQty = quantity + 1
     setQuantity(newQty)
+    
+    // If item is already in cart, update quantity directly
+    if (isInCart) {
+      dispatch(updateQuantity({ id: data._id, quantity: newQty }))
+    }
   }
+  
   const handleDecrease = () =>{
     if(quantity > 0){
-      const  newQty = quantity - 1
+      const newQty = quantity - 1
       setQuantity(newQty)
+      
+      // If item is in cart, update quantity directly
+      if (isInCart) {
+        if (newQty === 0) {
+          // Remove from cart if quantity becomes 0
+          dispatch(removeCartItem(data._id))
+        } else {
+          dispatch(updateQuantity({ id: data._id, quantity: newQty }))
+        }
+      }
     }
   }
   return (
@@ -55,23 +84,32 @@ const FoodCard = ({data}) => {
             <button className='px-2 py-1 hover:bg-gray-100 transition' onClick={handleDecrease}> 
             <FaMinus size={12} />
             </button>
-            <span>{quantity}</span>
+            <span className="min-w-[20px] text-center font-medium">{quantity}</span>
             <button className='px-2 py-1 hover:bg-gray-100 transition' onClick={handleIncrease}> 
             <FaPlus size={12} />
             </button>
-            <button className={`${cartItems.some( i => i.id == data._id) ? "bg-gray-800" : "bg-[#ff4d2d]" }  text-white px-3 py-2  transition-colors`} onClick={ () =>{
-              quantity > 0 ? 
-              dispatch(addToCart({
-                id:data._id,
-                name:data.name,
-                price:data.price,
-                image:data.image,
-                shop:data.shop,
-                quantity,
-                foodType:data.foodType,
-  })): null
-            } }> 
-            <FaShoppingCart size={16}  />
+            <button 
+              className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]" } text-white px-3 py-2 transition-colors hover:opacity-90 active:scale-95`} 
+              onClick={ () =>{
+                if (quantity > 0) {
+                  if (isInCart) {
+                    // Update quantity if already in cart
+                    dispatch(updateQuantity({ id: data._id, quantity: quantity }))
+                  } else {
+                    // Add to cart if not in cart
+                    dispatch(addToCart({
+                      id: data._id,
+                      name: data.name,
+                      price: data.price,
+                      image: data.image,
+                      shop: data.shop,
+                      quantity: quantity,
+                      foodType: data.foodType,
+                    }))
+                  }
+                }
+              } }> 
+              <FaShoppingCart size={16} />
             </button>
           </div>
         </div>
