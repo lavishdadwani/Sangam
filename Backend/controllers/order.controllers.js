@@ -23,7 +23,7 @@ export const createOrder = async (req, res) => {
       !deliveryAddress.latitude ||
       !deliveryAddress.longitude
     ) {
-      return res.error("Please provide complete delivery address.");
+      return res.error("Please provide a complete delivery address.");
     }
     const groupItemsByShop = {};
     cartItems.forEach((item) => {
@@ -63,7 +63,7 @@ export const createOrder = async (req, res) => {
       })
     );
 
-    if (paymentMethod == "online") {
+    if (paymentMethod === "online") {
       const razorOrder = await instance.orders.create({
         amount: Math.round(totalAmount) * 100,
         currency: "INR",
@@ -128,7 +128,7 @@ export const verifyPayment = async (req, res) => {
   try {
     const { razorpay_payment_id, orderId } = req.body;
     const payment = await instance.payments.fetch(razorpay_payment_id);
-    if (!payment || payment.status != "captured") {
+    if (!payment || payment.status !== "captured") {
       return res.error("Payment not captured.");
     }
     const order = await Order.findById(orderId);
@@ -199,7 +199,7 @@ export const getOrders = async (req, res) => {
       }));
       return res.success("Orders retrieved successfully", filteredOrders);
     }
-    return res.success("this is a delivery boy");
+    return res.success("Delivery boy orders retrieved successfully", []);
   } catch (err) {
     console.error(err);
     return res.error("Error retrieving orders", err);
@@ -246,7 +246,7 @@ export const UpdateOrderStatus = async (req, res) => {
       if (candidates.length == 0) {
         await order.save();
         return res.success(
-          "Order status updated but there is no delivery boy available."
+          "Order status updated, but no delivery boy is available."
         );
       }
       const deliveryAssignment = await DeliveryAssignment.create({
@@ -367,7 +367,7 @@ export const acceptOrder = async (req, res) => {
       return res.error("Assignments not found");
     }
     if (assignment.status !== "broadcasted") {
-      return res.error("Assignments is expired");
+      return res.error("This assignment has expired or is no longer available.");
     }
     const alreadyAssigned = await DeliveryAssignment.findOne({
       assignedTo: userId,
@@ -526,7 +526,7 @@ export const verifyDeliveryOtp = async (req, res) => {
     return res.success("Order Delivered Successfully");
   } catch (err) {
     console.error(err);
-    return res.error("Error verify delivery OTP error", err);
+    return res.error("Error while verifying delivery OTP", err);
   }
 };
 
@@ -560,10 +560,10 @@ export const getTodayDeliveries = async (req, res) => {
         count:stats[hour]
     }))
     formattedStats.sort((a,b) => a.hour - b.hour)
-    return res.success(" Success Message", formattedStats);
+    return res.success("Today's delivery statistics retrieved successfully", formattedStats);
   } catch (err) {
     console.error(err);
-    return res.error("Error while sending OTP", err);
+    return res.error("Error while retrieving today's deliveries", err);
 
   }
 }

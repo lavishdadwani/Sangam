@@ -27,11 +27,11 @@ export const createItem = async (req, res) => {
     await shop.save()
     await (await shop.populate('owner')).populate({
         path:"items",
-        options:{sort:{updatedAT:-1}}
+        options:{sort:{updatedAt:-1}}
     })
-    return res.success("Item Created Successfully.", shop);
+    return res.success("Item created successfully.", shop);
   } catch (err) {
-    return res.error("Got Create Item Error", err);
+        return res.error("Error while creating item", err);
   }
 };
 
@@ -54,12 +54,12 @@ export const editItem = async (req, res) => {
     }
     const shop = await Shop.findOne({owner:req.userId}).populate({
         path:"items",
-        options:{sort:{updatedAT:-1}}
+        options:{sort:{updatedAt:-1}}
     })
 
-    return res.success("Item Edited Successfully.", shop);
+    return res.success("Item updated successfully.", shop);
   } catch (err) {
-    return res.error("Got Edit Item  Error", err);
+    return res.error("Error while updating item", err);
   }
 };
 
@@ -68,14 +68,14 @@ export const getItemById = async (req, res) => {
     const itemId = req.params.itemId
     const item = await Item.findById(itemId)
     if(!item){
-        res.error("Item not found");
+        return res.error("Item not found");
     }
-    return res.success("Item got Successfully.", item);
+    return res.success("Item retrieved successfully.", item);
 
     
 
   } catch (err) {
-    return res.error("Got get Item Error", err);
+    return res.error("Error while retrieving item", err);
     
   }
 }
@@ -85,7 +85,7 @@ export const deleteItem = async (req, res) => {
       const itemId = req.params.itemId
       const item = await Item.findById(itemId)
       if(!item){
-          res.error("Item not found");
+          return res.error("Item not found");
       }
 
       const shop = await Shop.findOne({owner:req.userId})
@@ -94,12 +94,12 @@ export const deleteItem = async (req, res) => {
       await shop.save()
       await shop.populate({
         path:"items",
-        options:{sort:{updatedAT:-1}}
+        options:{sort:{updatedAt:-1}}
     })
-      return res.success("Item deleted Successfully.", shop);
+      return res.success("Item deleted successfully.", shop);
   
     } catch (err) {
-      return res.error("Got get Item Error", err);
+      return res.error("Error while retrieving item", err);
       
     }
   }
@@ -108,14 +108,14 @@ export const deleteItem = async (req, res) => {
 export const getItemByCity = async (req, res) => {
   try {
     const {city} = req.params
-    if ( !city) return res.error("City is required");
+    if (!city) return res.error("City is required.");
     const shops = await Shop.find({city:{$regex: new RegExp(`^${city}$`,"i")}})
-    if (!shops) return res.error("Shops not found");
+    if (!shops || shops.length === 0) return res.error("Shops not found");
     const shopIds = shops.map(shop => shop._id) 
     const items = await Item.find({shop:{$in:shopIds}})
-    return res.success("Got item by city Successfully.", items);
+    return res.success("Items retrieved by city successfully.", items);
   } catch (err) {
-    return res.error("Got-> get item by city Error", err);
+    return res.error("Error while retrieving items by city", err);
 
   }
 }
@@ -139,10 +139,10 @@ export const searchItems = async (req, res) => {
     try {
       const {query, city}  = req.query
       if(!query || !city){
-          return null
+          return res.error("Query and city are required.");
       }
       const shops = await Shop.find({city:{$regex: new RegExp(`^${city}$`,"i")}}).populate("items")
-      if (!shops) return res.error("Shops not found");
+      if (!shops || shops.length === 0) return res.error("Shops not found");
       const shopIds = shops.map(shop => shop._id) 
       const items = await Item.find({
         shop:{$in:shopIds},
@@ -165,7 +165,7 @@ export const searchItems = async (req, res) => {
     try {
         const {itemId, rating} = req.body
         if(!itemId || !rating){
-            return res.error("Item/ rating is required");
+            return res.error("Item ID and rating are required.");
         }
         if(rating < 1 || rating > 5){
             return res.error("Rating must be between 1 to 5");
@@ -183,7 +183,7 @@ export const searchItems = async (req, res) => {
 
     } catch (err) {
       console.error(err);
-      return res.error("Error while rating items", err);
+      return res.error("Error while updating item rating", err);
 
     }
   }

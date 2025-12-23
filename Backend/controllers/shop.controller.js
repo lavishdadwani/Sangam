@@ -38,7 +38,7 @@ export const createShop = async (req, res) => {
     return res.success("Shop Created Successfully.", shop);
   } catch (err) {
       console.log(err);
-    return res.error("got create shop user error", err);
+    return res.error("Error while creating shop", err);
   }
 };
 
@@ -47,26 +47,26 @@ export const  getShop = async (req,res) =>{
         const owner = req.userId
         const shop = await Shop.findOne({owner}).populate('owner').populate({
             path:"items",
-            options:{sort:{updatedAT:-1}}
+            options:{sort:{updatedAt:-1}}
         })
         if(!shop){
             return res.error("Shop not found");
         }
         return res.success("Success", shop);
     }catch(err){
-        return res.error("got create shop user error", err);
+        return res.error("Error while creating shop", err);
     }
 }
 
 export const getShopByCity = async (req, res) => {
   try {
     const {city} = req.params
-    const shop = await Shop.find({city:{$regex: new RegExp(`^${city}$`,"i")}}).populate("items") ;
-    if(!shop){
-        return res.error("Shop not found");
+    const shops = await Shop.find({city:{$regex: new RegExp(`^${city}$`,"i")}}).populate("items");
+    if(!shops || shops.length === 0){
+        return res.error("Shops not found");
     }
-    return res.success("Success", shop);
+    return res.success("Success", shops);
   } catch (err) {
-    return res.error("got shop by city error", err);
+    return res.error("Error while retrieving shops by city", err);
   }
 }
