@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
+import userAPI from "../../services/user/user"
 
 const ForgotPassword = () => {
   const primaryColor = "#ff4d2d";
   const hoverColor = "#e64323";
   const bgColor = "#fff9f6";
   const borderColor = "#ddd";
-  const [step, setStep] = useState(3);
+  const [step, setStep] = useState(1);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [OTP, setOTP] = useState("");
@@ -16,6 +17,55 @@ const ForgotPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [err, setErr] = useState('');
+
+  const handleSendOtp = async () =>{
+    try{
+      const result = await userAPI.sendOtp({email})
+      console.log(result)
+      if(result.ok){
+        setErr("")
+      }else{
+        setErr(result.data.message)
+      }
+      setStep(2)
+    }catch(err){
+      console.log(err)
+    }
+  }
+  const handleVerifyOtp = async () =>{
+    try{
+      const result = await userAPI.verifyOtp({email,OTP})
+      console.log(result)
+      if(result.ok){
+        setErr("")
+      }else{
+        setErr(result.data.message)
+        return
+      }
+      setStep(3)
+      }catch(err){
+      console.log(err)
+    }
+  }
+  const handleResetPassword = async () =>{
+    try{
+      if(newPassword != confirmPassword){
+        return null
+      }
+      const result = await userAPI.resetPassword({email,password:newPassword})
+      console.log(result)
+      if(result.ok){
+        setErr("")
+      }else{
+        setErr(result.data.message)
+        return
+      }
+      navigate(("/signIn"))
+    }catch(err){
+      console.log(err)
+    }
+  }
   return (
     <div className="flex w-full items-center justify-center min-h-screen p-4 bg-[#fff9f6]">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-8">
@@ -44,17 +94,19 @@ const ForgotPassword = () => {
                 className="w-full border-[1px] border-gray-200 rounded-lg px-3 py-2 focus:outline-none"
                 placeholder="Enter your Email"
                 name="email"
-                onChange={(e) => setEmail(e)}
+                onChange={(e) => setEmail(e.target.value)}
                 value={email}
+                required
                 style={{ border: `1px solid ${borderColor}` }}
               />
             </div>
             <button
               className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
-              onClick={() => {}}
+              onClick={handleSendOtp}
             >
               Send Otp
             </button>
+            <p className="text-red-500 text-center my-[10px]">{err && `* ${err}`}</p>
           </div>
         )}
         {step == 2 && (
@@ -74,15 +126,18 @@ const ForgotPassword = () => {
                 name="OTP"
                 onChange={(e) => setOTP(e.target.value)}
                 value={OTP}
+                required
                 style={{ border: `1px solid ${borderColor}` }}
               />
             </div>
             <button
               className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
-              onClick={() => {}}
+              onClick={handleVerifyOtp}
             >
               Verify Otp
             </button>
+            <p className="text-red-500 text-center my-[10px]">{err && `* ${err}`}</p>
+
           </div>
         )}
         {step == 3 && (
@@ -101,6 +156,7 @@ const ForgotPassword = () => {
                   className="w-full border rounded-lg px-3 py-2 focus:outline-none"
                   placeholder="Enter New Password"
                   name="newPassword"
+                  required
                   onChange={(e) => setNewPassword(e.target.value)}
                   style={{ border: `1px solid ${borderColor}` }}
                 />
@@ -126,6 +182,7 @@ const ForgotPassword = () => {
                   className="w-full border rounded-lg px-3 py-2 focus:outline-none"
                   placeholder="Confirm Password"
                   name="newPassword"
+                  required
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   style={{ border: `1px solid ${borderColor}` }}
                 />
@@ -139,10 +196,11 @@ const ForgotPassword = () => {
             </div>
             <button
               className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
-              onClick={() => {}}
+              onClick={handleResetPassword}
             >
               Reset Password
             </button>
+            <p className="text-red-500 text-center my-[10px]">{err && `* ${err}`}</p>
           </div>
         )}
       </div>

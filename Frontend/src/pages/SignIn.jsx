@@ -3,6 +3,12 @@ import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import userAPI from "../../services/user/user"
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../utils/firebase";
+import { ClipLoader } from "react-spinners";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/userSlice";
+import { openSnackbar } from "../redux/snackbarSlice";
 
 function SignIn() {
 
@@ -11,18 +17,69 @@ function SignIn() {
   const bgColor = "#fff9f6";
   const borderColor = "#ddd";
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate()
-
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch()
   const handleSignIn = async () =>{
     try{
+      setLoading(true)
       const result = await userAPI.signIn(formData)
-      console.log(result)
+      if(result.ok){
+        setErr("")
+        dispatch(setUserData(result.data.data))
+        console.log(result)
+        dispatch(openSnackbar("Signed in successfully", "success"))
+      }else{
+        setErr(result.data.message)
+        dispatch(openSnackbar(result.data?.message || "Failed to sign in", "error"))
+      }
+      setLoading(false)
     }catch(err){
       console.log(err)
+      setLoading(false)
+      dispatch(openSnackbar("Something went wrong. Please try again.", "error"))
     }
   }
-
+  const handleGoogleAuth = async () =>{
+    try{
+      setLoading(true)
+      const provider  = new GoogleAuthProvider()
+      provider.addScope('email');
+      const result = await signInWithPopup(auth, provider)
+      console.log('Google auth success:', result)
+      
+      const user = result.user;
+      const data = await userAPI.signUpWithGoogle({email:user.email});
+      if(data.ok){
+        setErr("")
+        dispatch(setUserData(result.data))
+        dispatch(openSnackbar("Signed in with Google", "success"))
+      }else{
+        setErr(result.data.message)
+        dispatch(openSnackbar(result.data?.message || "Failed to sign in with Google", "error"))
+      }
+      setLoading(false)
+    }catch(err){
+      console.error('Google authentication error:', err);
+      setLoading(false)
+      dispatch(openSnackbar("Google authentication failed", "error"))
+      // specific error types
+      if (err.code === 'auth/popup-closed-by-user') {
+        console.log('User closed the popup');
+      } else if (err.code === 'auth/popup-blocked') {
+        console.error('Popup was blocked by browser');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        console.log('Only one popup request is allowed at a time');
+      } else {
+        console.error('Authentication failed:', err.message);
+      }
+    }
+  }
   const onChange = (e) =>{
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
@@ -61,6 +118,7 @@ function SignIn() {
             onChange={ e => onChange(e)}
             value={formData?.email}
             style={{ border: `1px solid ${borderColor}` }}
+            required
           />
         </div>
 
@@ -78,8 +136,10 @@ function SignIn() {
               className="w-full border rounded-lg px-3 py-2 focus:outline-none"
               placeholder="Enter your Password"
               name="password"
+              value={formData?.password}
               onChange={e => onChange(e)}
               style={{ border: `1px solid ${borderColor}` }}
+              required
             />
             <button
               onClick={() => setShowPassword((prev) => !prev)}
@@ -96,15 +156,17 @@ function SignIn() {
           className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
           onClick={handleSignIn}
         >
+          {loading && <ClipLoader size={20} />}
           Sign In
         </button>
-        <button className="w-full mt-4 flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition duration-200 border-gray-400 hover:bg-gray-100 cursor-pointer">
+        <p className="text-red-500 text-center my-[10px]">{err && `* ${err}`}</p>
+        <button className="w-full mt-4 flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition duration-200 border-gray-400 hover:bg-gray-100 cursor-pointer" onClick={handleGoogleAuth}>
           <FcGoogle /> <span>Sign in with Google</span>
         </button>
         <p className="text-center mt-6">
           Want to create a new account?{" "}
           <Link className="text-[#ff4d2d" to={"/signUp"}>
-            <span className="text-[#ff4d2d]">Sign In</span>
+            <span className="text-[#ff4d2d]">Sign Up</span>
           </Link>{" "}
         </p>
       </div>
