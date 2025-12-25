@@ -3,7 +3,7 @@ import orderAPI from "../../services/order";
 import { openSnackbar } from "../redux/snackbarSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaStore, FaShoppingBag, FaMapMarkerAlt, FaUser, FaPhone, FaTruck } from "react-icons/fa";
+import { FaStore, FaShoppingBag, FaMapMarkerAlt, FaUser, FaPhone, FaTruck, FaCheckCircle } from "react-icons/fa";
 import { MdDeliveryDining } from "react-icons/md";
 import DeliveryBoyTracking from "../components/DeliveryBoyTracking";
 import PageHeader from "../components/PageHeader";

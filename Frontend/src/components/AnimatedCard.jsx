@@ -5,18 +5,75 @@ const AnimatedCard = ({
   index = 0, 
   delay = 100, 
   className = "",
-  animationType = "fadeInUp",
-  duration = "0.5s"
+  animationType = "slideInRight",
+  duration = "0.4s"
 }) => {
-  const animationClass = `opacity-0 transform translate-y-6 scale-95 animate-[${animationType}_${duration}_ease-out_forwards]`;
-  
+  const animationStyle = {
+    animationDelay: `${index * delay}ms`,
+    animationDuration: duration,
+    animationFillMode: "forwards",
+    animationTimingFunction: "ease-out",
+  };
+
+  const getAnimationClass = () => {
+    switch (animationType) {
+      case "slideInRight":
+        return "animate-slide-in-right";
+      case "fadeInUp":
+        return "animate-fade-in-up";
+      default:
+        return "animate-fade-in";
+    }
+  };
+
   return (
-    <div
-      className={`${animationClass} ${className}`}
-      style={{ animationDelay: `${index * delay}ms` }}
-    >
-      {children}
-    </div>
+    <>
+      <style>{`
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        .animate-slide-in-right {
+          animation-name: slideInRight;
+        }
+        .animate-fade-in-up {
+          animation-name: fadeInUp;
+        }
+        .animate-fade-in {
+          animation-name: fadeIn;
+        }
+      `}</style>
+      <div
+        className={`${getAnimationClass()} ${className}`}
+        style={animationStyle}
+      >
+        {children}
+      </div>
+    </>
   );
 };
 
