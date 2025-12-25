@@ -2,11 +2,11 @@ import apiConfig from "./config.js"
 
 const create = (data) => apiConfig.client.post("order/create",data)
 const verifyPayment = (data) => apiConfig.client.post("order/verify-payment",data)
-const getOrders = () => apiConfig.client.get("order/orders",)
+const getOrders = () => apiConfig.client.get("order/orders")
 
 // for deliveryBoy
-const getAssignments = () => apiConfig.client.get("order/get-assignments",)
-const getCurrentOrder = () => apiConfig.client.get("order/current-order",)
+const getAssignments = () => apiConfig.client.get("order/get-assignments")
+const getCurrentOrder = () => apiConfig.client.get("order/current-order")
 
 const getOrderByID = (id) => apiConfig.client.get(`order/order/${id}`)
 
