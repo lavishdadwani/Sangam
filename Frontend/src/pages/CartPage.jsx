@@ -18,7 +18,7 @@ const CartPage = () => {
           <BackButton />
           <h1 className="text-3xl font-bold text-start text-gray-800 tracking-tight">Your Cart</h1>
         </div>
-        {cartItems?.length == 0 ? (
+        {!cartItems || cartItems.length === 0 ? (
             <EmptyState
               icon={FiShoppingCart}
               title="Your Cart is Empty"
@@ -26,12 +26,12 @@ const CartPage = () => {
               buttonText="Start Shopping"
               buttonRoute="/"
             />
-        ):(
+        ) : (
             <>
             <div className="space-y-4">
-                {cartItems?.map( (item,index)=> (
+                {cartItems.map((item, index) => (
                     <AnimatedCard 
-                      key={index}
+                      key={item.id || index}
                       index={index}
                       delay={100}
                       animationType="slideInRight"

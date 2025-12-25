@@ -3,8 +3,7 @@ import axios from "axios";
 import { create } from "apisauce"
 
 const customAxiosInstance = axios.create({
-    // baseURL: "http://localhost:8000/api/auth" // local
-    baseURL: "https://sangam-h96y.onrender.com/api/auth", // development
+    baseURL: `${import.meta.env.VITE_SERVER_URL}/api/auth`, // development
     withCredentials: true // Required for HTTP-only cookies to be sent with requests
 })
 

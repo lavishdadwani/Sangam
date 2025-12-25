@@ -52,7 +52,7 @@ const DeliveryBoy = () => {
   }, [socket, userData]);
 
 
-  const getAssignment = async (req, res) => {
+  const getAssignment = async () => {
     try {
       const result = await orderAPI.getAssignments();
 
@@ -60,12 +60,12 @@ const DeliveryBoy = () => {
         setAvailableAssignments(result.data.data);
         //   dispatch(openSnackbar("fetched assignment successfully", "success"));
       } else {
-        dispatch(
-          openSnackbar(
-            result.data?.message || "Failed to fetch assignment",
-            "error"
-          )
-        );
+        // dispatch(
+        //   openSnackbar(
+        //     result.data?.message || "Failed to fetch assignment",
+        //     "error"
+        //   )
+        // );
       }
     } catch (err) {
       console.error(err);

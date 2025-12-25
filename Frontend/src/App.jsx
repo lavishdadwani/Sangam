@@ -26,48 +26,94 @@ import { setSocket } from './redux/userSlice'
 import { io } from 'socket.io-client'
 
 function App() {
-  const {userData} = useSelector(state => state.user)
+  const { userData } = useSelector((state) => state.user)
   const dispatch = useDispatch()
+  
   useUpdateLocation()
-  // Always call hook; it internally checks for owner role
   useGetCurrentUser()
   useGetCity()
-  // if(userData){
-    useGetShopByCity()
-    useGetItemByCity()
-    useGetMyShop()
-    useGetMyOrders()
-  // }
+  useGetShopByCity()
+  useGetItemByCity()
+  useGetMyShop()
+  useGetMyOrders()
 
   useEffect(() => {
-    const socketInstance = io("https://sangam-h96y.onrender.com", {withCredentials:true})
-    dispatch(setSocket(socketInstance))
-    socketInstance.on("connect",() => {
-     if(userData){
-      socketInstance.emit("identity",{userId:userData._id})
-     }
+    const socketInstance = io(import.meta.env.VITE_SERVER_URL, {
+      withCredentials: true
     })
+    
+    dispatch(setSocket(socketInstance))
+
+    const handleConnect = () => {
+      if (userData?._id) {
+        socketInstance.emit("identity", { userId: userData._id })
+      }
+    }
+
+    const handleError = (error) => {
+      console.error("Socket connection error:", error)
+    }
+
+    socketInstance.on("connect", handleConnect)
+    socketInstance.on("error", handleError)
+
+    if (socketInstance.connected && userData?._id) {
+      socketInstance.emit("identity", { userId: userData._id })
+    }
+
     return () => {
+      socketInstance.off("connect", handleConnect)
+      socketInstance.off("error", handleError)
       socketInstance.disconnect()
     }
-  }, [userData?._id]);
+  }, [userData?._id, dispatch])
   return (
     <>
       <Snackbar />
       <Routes>
-        <Route path='/' element={userData ? <Home /> : <Navigate to={"/signIn"} /> }/>
-        <Route path='/signIn' element={!userData ? <SignIn /> : <Navigate to={'/'} /> }/>
-        <Route path='/signUp' element={!userData ? <SignUp /> : <Navigate to={'/'} />} />
-        <Route path='/forgot-password' element={!userData ? <ForgotPassword /> : <Navigate to={'/'}/>} />
-        <Route path='/create-edit-shop' element={userData ? <CreateEditShop /> : <Navigate to={'/'}/>} />
-        <Route path='/add-item' element={userData ? <AddItem /> : <Navigate to={'/'}/>} />
-        <Route path='/edit-item/:itemId' element={userData ? <EditItem /> : <Navigate to={'/'}/>} />
-        <Route path='/cart' element={userData ? <CartPage /> : <Navigate to={'/signIn'}/>} />
-        <Route path='/checkOut' element={userData ? <CheckOut /> : <Navigate to={'/signIn'}/>} />
-        <Route path='/order-placed' element={userData ? <OrderPlaced /> : <Navigate to={'/signIn'}/>} />
-        <Route path='/my-orders' element={userData ? <MyOrders /> : <Navigate to={'/signIn'}/>} />
-        <Route path='/track-order/:orderId' element={userData ? <TrackOrderPage /> : <Navigate to={'/signIn'}/>} />
-        <Route path='/shop/:shopId' element={userData ? <Shop /> : <Navigate to={'/signIn'}/>} />
+        <Route path="/" element={userData ? <Home /> : <Navigate to="/signIn" />} />
+        <Route path="/signIn" element={!userData ? <SignIn /> : <Navigate to="/" />} />
+        <Route path="/signUp" element={!userData ? <SignUp /> : <Navigate to="/" />} />
+        <Route
+          path="/forgot-password"
+          element={!userData ? <ForgotPassword /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/create-edit-shop"
+          element={userData ? <CreateEditShop /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/add-item"
+          element={userData ? <AddItem /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/edit-item/:itemId"
+          element={userData ? <EditItem /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/cart"
+          element={userData ? <CartPage /> : <Navigate to="/signIn" />}
+        />
+        <Route
+          path="/checkOut"
+          element={userData ? <CheckOut /> : <Navigate to="/signIn" />}
+        />
+        <Route
+          path="/order-placed"
+          element={userData ? <OrderPlaced /> : <Navigate to="/signIn" />}
+        />
+        <Route
+          path="/my-orders"
+          element={userData ? <MyOrders /> : <Navigate to="/signIn" />}
+        />
+        <Route
+          path="/track-order/:orderId"
+          element={userData ? <TrackOrderPage /> : <Navigate to="/signIn" />}
+        />
+        <Route
+          path="/shop/:shopId"
+          element={userData ? <Shop /> : <Navigate to="/signIn" />}
+        />
       </Routes>
     </>
   )
