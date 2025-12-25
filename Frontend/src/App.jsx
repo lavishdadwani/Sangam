@@ -40,7 +40,7 @@ function App() {
   // }
 
   useEffect(() => {
-    const socketInstance = io("http://localhost:8000", {withCredentials:true})
+    const socketInstance = io(import.meta.env.VITE_SERVER_URL, {withCredentials:true})
     dispatch(setSocket(socketInstance))
     socketInstance.on("connect",() => {
      if(userData){

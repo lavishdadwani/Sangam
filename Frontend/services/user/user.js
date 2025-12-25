@@ -24,7 +24,7 @@ const resetPassword = (data) => apiConfig.client.post(`user/reset-password`,data
 
 const signUpWithGoogle = (data) => apiConfig.client.post(`user/google-auth`,data,{withCredentials:true})
 
-const getCurrentUser = () => apiConfig.client.get(`user/current-user`,{withCredentials:true})
+const getCurrentUser = () => apiConfig.client.get(`user/current-user`)
 
 const updateLocation = (data) => apiConfig.client.post(`user/update-location`,data)
 
