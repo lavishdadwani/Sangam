@@ -64,8 +64,9 @@ const HorizontalScrollSection = ({
           </button>
         )}
         <div
-          className="w-full flex overflow-x-auto gap-4 pb-2 scrollbar-thin scrollbar-thumb-[#ff4d2d] scrollbar-track-transparent scroll-smooth"
+          className="w-full flex flex-nowrap overflow-x-auto gap-4 pb-2 scrollbar-thin scrollbar-thumb-[#ff4d2d] scrollbar-track-transparent scroll-smooth"
           ref={scrollRef}
+          style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {items?.length > 0
             ? items.map((item, index) => renderItem(item, index))

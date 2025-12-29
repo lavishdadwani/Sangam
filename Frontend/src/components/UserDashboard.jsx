@@ -5,15 +5,18 @@ import { categories } from "../categories";
 import CategoryCard from "./CategoryCard";
 import HorizontalScrollSection from "./HorizontalScrollSection";
 import FoodCard from "./FoodCard";
+import SearchResultsSection from "./SearchResultsSection";
 import { useNavigate } from "react-router-dom";
-import itemAPI from "../../services/item"
 
 const UserDashboard = () => {
   const { userData, currentCity, shopsInMyCity = [], itemsInMyCity = [], cartItems, searchItems, myOrders } = useSelector((state) => state.user);
 
   const [updatedItemsList, setUpdatedItemsList] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState(null)
   const navigate = useNavigate()
+  
   const handleFilterByCategory = (category) =>{
+    setSelectedCategory(category)
     if(category === "All"){
         setUpdatedItemsList(itemsInMyCity)
     }else{
@@ -21,34 +24,55 @@ const UserDashboard = () => {
         setUpdatedItemsList(filteredList)
     }
   }
+  
   useEffect(() => {
     setUpdatedItemsList(itemsInMyCity)
+    setSelectedCategory(null) // Reset filter when items change
   }, [itemsInMyCity]);
 
 
   return (
-    <div className="w-screen min-h-screen flex flex-col gap-5 items-center bg-[#fff9f6 overflow-y-auto">
+    <div className="w-screen min-h-screen flex flex-col gap-5 items-center bg-[#fff9f6] overflow-y-auto">
       <Nav userData={userData} currentCity={currentCity} cartItems={cartItems} myOrders={myOrders} />
-      {searchItems && searchItems.length > 0 && (
-        <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-5 bg-white shadow-md rounded-2xl mt-4">
-            <h1 className="text-gray-900 text-2xl sm:text-3xl font-semibold border-b border-gray-200 pb-2">
-                Search Result
-            </h1>
-            <div className="w-full h-auto flex flex-wrap gap-6 justify-center">
-                {searchItems.map(item =>(
-                    <FoodCard data={item} key={item._id} />
-                ))}
-            </div>
-        </div>
-      )}
+      
+      <SearchResultsSection
+        items={searchItems}
+        title="Search Results"
+        renderItem={(item) => <FoodCard data={item} key={item._id} />}
+      />
       <HorizontalScrollSection
         title="Inspiration for your first order"
         items={categories}
         containerClassName="mt-[80px]"
         renderItem={(category, index) => (
-          <CategoryCard name={category.category} image={category.image} key={index} onClick={()=> handleFilterByCategory(category.category)} />
+          <CategoryCard 
+            name={category.category} 
+            image={category.image} 
+            key={index} 
+            onClick={()=> handleFilterByCategory(category.category)}
+            isSelected={selectedCategory === category.category}
+          />
         )}
       />
+      
+      {/* Active Filter Indicator */}
+      {selectedCategory && (
+        <div className="w-full max-w-6xl flex items-center gap-3 px-5 py-3 bg-white rounded-xl shadow-md border border-[#ff4d2d]/20">
+          <span className="text-sm text-gray-600">Filtered by:</span>
+          <span className="px-4 py-1.5 bg-[#ff4d2d] text-white rounded-full text-sm font-semibold shadow-sm">
+            {selectedCategory}
+          </span>
+          <button
+            onClick={() => {
+              setSelectedCategory(null)
+              setUpdatedItemsList(itemsInMyCity)
+            }}
+            className="ml-auto text-sm text-[#ff4d2d] hover:text-[#e64323] font-medium hover:underline transition-colors"
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
 
       <HorizontalScrollSection
         title={`Best Shop in ${currentCity || "your city"}`}

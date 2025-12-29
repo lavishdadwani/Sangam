@@ -20,7 +20,7 @@ const ItemSchema = new Schema(
       type: String,
       enum: [
         "Snacks",
-        "main COurse",
+        "Main Course",
         "Desserts",
         "Pizza",
         "Burgers",
