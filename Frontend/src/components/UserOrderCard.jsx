@@ -11,8 +11,8 @@ import { HiReceiptRefund } from 'react-icons/hi'
 import { MdPayment, MdDeliveryDining } from 'react-icons/md'
 
 const UserOrderCard = ({ data }) => {
-  const [selectedRating, setSelectedRating] = useState({})
-  const navigate = useNavigate()
+    const [selectedRating, setSelectedRating] = useState({})
+    const navigate = useNavigate()
   const dispatch = useDispatch()
 
   // Calculate items total and delivery fee
@@ -23,19 +23,19 @@ const UserOrderCard = ({ data }) => {
   }, [data.shopOrders])
 
   const handleRating = async (itemId, rating) => {
-    try {
+      try {
       const result = await ItemAPI.rating({ itemId, rating })
-      if (result.ok) {
+        if (result.ok) {
         setSelectedRating(prev => ({ ...prev, [itemId]: rating }))
         // dispatch(openSnackbar("Rating submitted successfully", "success"))
-      } else {
+        } else {
         dispatch(openSnackbar(result.data?.message || "Failed to submit rating", "error"))
-      }
-    } catch (err) {
+        }
+      } catch (err) {
       console.error(err)
       dispatch(openSnackbar(err.message || "Something went wrong", "error"))
+      }
     }
-  }
 
   const getPaymentStatus = () => {
     if (data.paymentMethod === "cod") {
@@ -71,7 +71,7 @@ const UserOrderCard = ({ data }) => {
             <div className='flex items-center gap-2 text-sm'>
               <PaymentIcon className={`${paymentInfo.color} text-base`} />
               <span className={`font-medium ${paymentInfo.color}`}>{paymentInfo.text}</span>
-            </div>
+        </div>
             {data.shopOrders?.[0] && (
               <StatusBadge status={data.shopOrders[0].status} />
             )}
@@ -146,12 +146,12 @@ const UserOrderCard = ({ data }) => {
                           >
                             <FaStar className='text-base' />
                           </button>
-                        ))}
-                      </div>
+                                ))}
+                            </div>
                     </div>
                   )}
                 </div>
-              ))}
+                ))}
             </div>
 
             {/* Shop Order Footer */}
@@ -165,8 +165,8 @@ const UserOrderCard = ({ data }) => {
               </div>
               <StatusBadge status={shopOrder.status} />
             </div>
-          </div>
-        ))}
+        </div>
+      ))}
       </div>
 
       {/* Footer Section */}
