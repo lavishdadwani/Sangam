@@ -63,19 +63,19 @@ const AddItem = () => {
             formData.append('price', data.price);
             formData.append('image', backendImage);
             const result = await ItemAPI.create(formData);
-            if (result.ok) {
-                dispatch(setOwnerData(result.data.data));
-                dispatch(openSnackbar("Item Created Successfully", "success"));
+      if (result.ok) {
+        dispatch(setOwnerData(result.data.data));
+        dispatch(openSnackbar("Item Created Successfully", "success"));
                 navigate("/");
-            } else {
-                dispatch(openSnackbar(result.data?.message || "Error while creating Item", "error"));
-            }
-        } catch (err) {
-            console.error(err);
-            dispatch(openSnackbar(err.message || "Error while creating Item", "error"));
+      } else {
+        dispatch(openSnackbar(result.data?.message || "Error while creating Item", "error"));
+      }
+    } catch (err) {
+      console.error(err);
+      dispatch(openSnackbar(err.message || "Error while creating Item", "error"));
         } finally {
             setLoading(false);
-        }
+    }
     };
     return (
       <div className="flex justify-center flex-col items-center p-4 sm:p-6 bg-gradient-to-br from-orange-50 via-white to-orange-50 relative min-h-screen">
@@ -104,8 +104,8 @@ const AddItem = () => {
             <InputText
               label="Item Name"
               labelIcon={FaUtensils}
-              type="text"
-              name="name"
+                type="text"
+                name="name"
               placeholder="e.g., Margherita Pizza"
               icon={FaUtensils}
               required
@@ -128,7 +128,7 @@ const AddItem = () => {
               label="Item Image"
               onImageChange={handleImageChange}
               maxSize={5}
-              accept="image/*"
+                accept="image/*"
               required
               error={errors.image?.message}
             />
@@ -137,8 +137,8 @@ const AddItem = () => {
             <InputText
               label="Price"
               labelIcon={FaRupeeSign}
-              type="number"
-              name="price"
+                type="number"
+                name="price"
               placeholder="0.00"
               icon={FaRupeeSign}
               min="0"
@@ -153,7 +153,7 @@ const AddItem = () => {
                 },
                 valueAsNumber: true
               })}
-            />
+              />
 
             {/* Category Field */}
             <InputSelect

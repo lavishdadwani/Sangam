@@ -1,12 +1,12 @@
 import React from "react";
 
-const AnimatedCard = ({ 
-  children, 
-  index = 0, 
-  delay = 100, 
+const AnimatedCard = ({
+  children,
+  index = 0,
+  delay = 100,
   className = "",
   animationType = "slideInRight",
-  duration = "0.4s"
+  duration = "0.4s",
 }) => {
   const animationStyle = {
     animationDelay: `${index * delay}ms`,
@@ -78,4 +78,3 @@ const AnimatedCard = ({
 };
 
 export default AnimatedCard;
-

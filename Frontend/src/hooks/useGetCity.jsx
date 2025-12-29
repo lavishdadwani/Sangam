@@ -5,7 +5,7 @@ import getCityName from "../../services/helpers";
 import { setAddress, setLocation } from "../redux/mapSlice";
 
 function useGetCity() {
-  const dispatch = useDispatch()
+    const dispatch = useDispatch()
   const { userData, currentCity } = useSelector((state) => state.user)
 
   useEffect(() => {
@@ -17,7 +17,7 @@ function useGetCity() {
       return
     }
 
-    navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.getCurrentPosition( 
       async (position) => {
         try {
           const latitude = position.coords.latitude
@@ -32,9 +32,9 @@ function useGetCity() {
             
             if (cityName) {
               dispatch(setCurrentAddress(address))
-              dispatch(setCurrentCity(cityName))
-              dispatch(setCurrentState(stateName))
-              dispatch(setAddress(result.results[0].address_line2))
+            dispatch(setCurrentCity(cityName))
+            dispatch(setCurrentState(stateName))
+            dispatch(setAddress(result.results[0].address_line2))
             } else {
               console.error("City name not found in geolocation response")
             }

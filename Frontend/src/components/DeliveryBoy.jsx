@@ -80,12 +80,12 @@ const DeliveryBoy = () => {
       if (result.ok) {
         setCurrentOrder(result.data.data);
       } else {
-        dispatch(
-          openSnackbar(
-            result.data?.message || "Failed to accept order",
-            "error"
-          )
-        );
+        // dispatch(
+        //   openSnackbar(
+        //     result.data?.message || "Failed to accept order",
+        //     "error"
+        //   )
+        // );
       }
     } catch (err) {
       console.error(err);

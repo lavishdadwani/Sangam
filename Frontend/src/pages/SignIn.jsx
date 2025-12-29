@@ -1,87 +1,112 @@
-import React, { useEffect, useState } from "react";
-import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { FaEnvelope, FaLock } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import userAPI from "../../services/user/user"
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../utils/firebase";
-import { ClipLoader } from "react-spinners";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 import { openSnackbar } from "../redux/snackbarSlice";
+import InputText from "../components/InputText";
+import InputPassword from "../components/InputPassword";
+import ButtonSquare from "../components/ButtonSquare";
+import { emailRegex } from "../../utils/helpers";
 
 function SignIn() {
-
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const [loading, setLoading] = React.useState(false);
+  
   const primaryColor = "#ff4d2d";
-  const hoverColor = "#e64323";
   const bgColor = "#fff9f6";
   const borderColor = "#ddd";
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+    clearErrors,
+  } = useForm({
+    defaultValues: {
+      email: '',
+      password: ''
+    }
   });
-  const navigate = useNavigate()
-  const [err, setErr] = useState('');
-  const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch()
-  const handleSignIn = async () =>{
-    try{
+
+  const onSubmit = async (data) => {
+    try {
       setLoading(true)
-      const result = await userAPI.signIn(formData)
-      if(result.ok){
-        setErr("")
-        dispatch(setUserData(result.data.data))
-        console.log(result)
-        dispatch(openSnackbar("Signed in successfully", "success"))
-      }else{
-        setErr(result.data.message)
-        dispatch(openSnackbar(result.data?.message || "Failed to sign in", "error"))
-      }
-      setLoading(false)
-    }catch(err){
-      console.log(err)
-      setLoading(false)
-      dispatch(openSnackbar("Something went wrong. Please try again.", "error"))
-    }
-  }
-  const handleGoogleAuth = async () =>{
-    try{
-      setLoading(true)
-      const provider  = new GoogleAuthProvider()
-      provider.addScope('email');
-      const result = await signInWithPopup(auth, provider)
-      console.log('Google auth success:', result)
+      clearErrors()
       
-      const user = result.user;
-      const data = await userAPI.signUpWithGoogle({email:user.email});
-      if(data.ok){
-        setErr("")
-        dispatch(setUserData(result.data))
-        dispatch(openSnackbar("Signed in with Google", "success"))
-      }else{
-        setErr(result.data.message)
-        dispatch(openSnackbar(result.data?.message || "Failed to sign in with Google", "error"))
-      }
-      setLoading(false)
-    }catch(err){
-      console.error('Google authentication error:', err);
-      setLoading(false)
-      dispatch(openSnackbar("Google authentication failed", "error"))
-      // specific error types
-      if (err.code === 'auth/popup-closed-by-user') {
-        console.log('User closed the popup');
-      } else if (err.code === 'auth/popup-blocked') {
-        console.error('Popup was blocked by browser');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        console.log('Only one popup request is allowed at a time');
+      const result = await userAPI.signIn(data)
+      
+      if (result.ok) {
+        const userData = result.data.data
+        dispatch(setUserData(userData))
+        dispatch(openSnackbar("Signed in successfully", "success"))
+        navigate("/")
       } else {
-        console.error('Authentication failed:', err.message);
+        const errorMessage = result.data?.message || "Failed to sign in"
+        
+        // Handle specific backend errors
+        if (errorMessage.toLowerCase().includes("email")) {
+          setError("email", { type: "server", message: errorMessage })
+        } else if (errorMessage.toLowerCase().includes("password")) {
+          setError("password", { type: "server", message: errorMessage })
+        } else {
+          dispatch(openSnackbar(errorMessage, "error"))
+        }
       }
+    } catch (err) {
+      console.error("SignIn error:", err)
+      const errorMessage = err.response?.data?.message || err.message || "Something went wrong. Please try again."
+      dispatch(openSnackbar(errorMessage, "error"))
+    } finally {
+      setLoading(false)
     }
   }
-  const onChange = (e) =>{
-    setFormData({ ...formData, [e.target.name]: e.target.value })
+
+  const handleGoogleAuth = async () => {
+    try {
+      setLoading(true)
+      const provider = new GoogleAuthProvider()
+      provider.addScope('profile')
+      provider.addScope('email')
+      
+      const result = await signInWithPopup(auth, provider)
+      
+      const user = result.user
+      const data = await userAPI.signUpWithGoogle({ email: user.email })
+      
+      if (data.ok) {
+        const responseData = data.data || data
+        dispatch(setUserData(responseData))
+        dispatch(openSnackbar("Signed in with Google successfully", "success"))
+        navigate("/")
+      } else {
+        const errorMessage = data.data?.message || "Failed to sign in with Google"
+        dispatch(openSnackbar(errorMessage, "error"))
+      }
+    } catch (err) {
+      console.error('Google authentication error:', err)
+      
+      // Handle specific error types
+      if (err.code === 'auth/popup-closed-by-user') {
+        dispatch(openSnackbar("Sign in cancelled", "info"))
+      } else if (err.code === 'auth/popup-blocked') {
+        dispatch(openSnackbar("Popup was blocked. Please allow popups for this site.", "error"))
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        dispatch(openSnackbar("Please wait for the current sign in to complete", "warning"))
+      } else {
+        const errorMessage = err.response?.data?.message || err.message || "Google authentication failed"
+        dispatch(openSnackbar(errorMessage, "error"))
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -102,67 +127,75 @@ function SignIn() {
         <p className="text-gray-600 mb-8">
           Sign in to get instant groceries
         </p>
-        {/* email */}
-        <div className="mb-4">
-          <label
-            htmlFor="email"
-            className="block text-gray-700 font-medium mb-1"
-          >
-            Email
-          </label>
-          <input
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Email */}
+          <InputText
+            label="Email"
+            labelIcon={FaEnvelope}
             type="email"
-            className="w-full border rounded-lg px-3 py-2 focus:outline-none"
-            placeholder="Enter your Email"
             name="email"
-            onChange={ e => onChange(e)}
-            value={formData?.email}
-            style={{ border: `1px solid ${borderColor}` }}
+            placeholder="Enter your Email"
+            register={register("email", {
+              required: "Email is required",
+              pattern: {
+                value: emailRegex,
+                message: "Please enter a valid email address"
+              }
+            })}
+            error={errors.email}
             required
           />
-        </div>
 
-        {/* password */}
-        <div className="mb-4">
-          <label
-            htmlFor="password"
-            className="block text-gray-700 font-medium mb-1"
+          {/* Password */}
+          <InputPassword
+            label="Password"
+            labelIcon={FaLock}
+            name="password"
+            placeholder="Enter your Password"
+            register={register("password", {
+              required: "Password is required"
+            })}
+            error={errors.password}
+            required
+          />
+
+          <div className="text-right font-medium text-[#ff4d2d] mb-4 cursor-pointer hover:underline" onClick={() => navigate("/forgot-password")}>
+            Forgot Password ?
+          </div>
+
+          {/* Submit Button */}
+          <ButtonSquare
+            type="submit"
+            styleType="default"
+            loading={loading}
+            loadingMessage="Signing in..."
+            disabled={loading}
+            className="w-full py-3"
           >
-            Password
-          </label>
-          <div className="relative">
-            <input
-              type={`${showPassword ? "text" : "password"}`}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none"
-              placeholder="Enter your Password"
-              name="password"
-              value={formData?.password}
-              onChange={e => onChange(e)}
-              style={{ border: `1px solid ${borderColor}` }}
-              required
-            />
-            <button
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 cursor-pointer top-[14px] text-gray-500"
-            >
-              {showPassword ? <FaRegEye /> : <FaRegEyeSlash/>}
-            </button>
+            Sign In
+          </ButtonSquare>
+        </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with</span>
           </div>
         </div>
-        <div className="text-right font-medium text-[#ff4d2d] mb-4 cursor-pointer" onClick={ () => navigate("/forgot-password")}>
-          Forgot Password ?
-        </div>
-        <button
-          className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
-          onClick={handleSignIn}
+
+        <ButtonSquare
+          type="button"
+          styleType="outline"
+          onClick={handleGoogleAuth}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 py-3"
         >
-          {loading && <ClipLoader size={20} />}
-          Sign In
-        </button>
-        <p className="text-red-500 text-center my-[10px]">{err && `* ${err}`}</p>
-        <button className="w-full mt-4 flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition duration-200 border-gray-400 hover:bg-gray-100 cursor-pointer" onClick={handleGoogleAuth}>
-          <FcGoogle /> <span>Sign in with Google</span>
-        </button>
+          <FcGoogle size={20} />
+          <span>Sign in with Google</span>
+        </ButtonSquare>
         <p className="text-center mt-6">
           Want to create a new account?{" "}
           <Link className="text-[#ff4d2d" to={"/signUp"}>
