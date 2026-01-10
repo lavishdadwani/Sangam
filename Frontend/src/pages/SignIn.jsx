@@ -102,7 +102,15 @@ function SignIn() {
         dispatch(openSnackbar("Please wait for the current sign in to complete", "warning"))
       } else {
         const errorMessage = err.response?.data?.message || err.message || "Google authentication failed"
-        dispatch(openSnackbar(errorMessage, "error"))
+        
+        // Check if user already exists in error message
+        if (errorMessage.toLowerCase().includes("already exists") || 
+            errorMessage.toLowerCase().includes("user exists") ||
+            errorMessage.toLowerCase().includes("already registered")) {
+          dispatch(openSnackbar("User already exists. Please login with your email and password.", "warning"))
+        } else {
+          dispatch(openSnackbar(errorMessage, "error"))
+        }
       }
     } finally {
       setLoading(false)
@@ -190,8 +198,10 @@ function SignIn() {
           type="button"
           styleType="outline"
           onClick={handleGoogleAuth}
+          loading={loading}
+          loadingMessage="Signing in with Google..."
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-3"
+          className="w-full flex items-center justify-center gap-2 py-3 cursor-pointer"
         >
           <FcGoogle size={20} />
           <span>Sign in with Google</span>
