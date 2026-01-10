@@ -48,7 +48,7 @@ const HorizontalScrollSection = ({
   }, [items, updateButtons]);
 
   return (
-    <div className={`w-full max-w-6xl flex flex-col gap-5 items-start p-[10px] ${containerClassName}`}>
+    <div className={`w-full flex flex-col gap-5 items-start p-[10px] px-4 md:px-6 lg:px-8 ${containerClassName}`}>
       {title && (
         <h1 className="text-gray-800 text-2xl sm:text-3xl">
           {title}

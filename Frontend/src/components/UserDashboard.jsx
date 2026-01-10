@@ -57,7 +57,7 @@ const UserDashboard = () => {
       
       {/* Active Filter Indicator */}
       {selectedCategory && (
-        <div className="w-full max-w-6xl flex items-center gap-3 px-5 py-3 bg-white rounded-xl shadow-md border border-[#ff4d2d]/20">
+        <div className="w-full flex items-center gap-3 px-5 py-3 mx-4 md:mx-6 lg:mx-8 bg-white rounded-xl shadow-md border border-[#ff4d2d]/20">
           <span className="text-sm text-gray-600">Filtered by:</span>
           <span className="px-4 py-1.5 bg-[#ff4d2d] text-white rounded-full text-sm font-semibold shadow-sm">
             {selectedCategory}

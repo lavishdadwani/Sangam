@@ -40,3 +40,22 @@
 .read-the-docs {
   color: #888;
 } */
+
+/* React Responsive Modal Custom Styles */
+.react-responsive-modal-modal {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.react-responsive-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px);
+}
+
+.react-responsive-modal-closeButton {
+  top: 1rem !important;
+  right: 1rem !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
