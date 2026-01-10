@@ -7,12 +7,10 @@ export const signUp = async (req, res) => {
   try {
     const { fullName, mobile, email, role, password } = req.body;
 
-    // Validate required fields
     if (!fullName || !mobile || !email || !role || !password) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    // Check if user already exists (email or mobile number)
     const existingUser = await User.findOne({
       $or: [{ email }, { mobile }],
     });
@@ -59,7 +57,6 @@ export const signUp = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Convert to plain object and remove password
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -76,7 +73,6 @@ export const signIn = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate required fields
     if (!email || !password) {
       return res
         .status(400)
@@ -98,7 +94,6 @@ export const signIn = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Convert to plain object and remove password
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -228,16 +223,38 @@ export const getCurrentUser = async (req,res) =>{
 
 export const updateUserLocation = async (req, res) => {
   try {
-    const {lat,lng} = req.body
-    const userId = req.userId
-    const user = await User.findByIdAndUpdate(userId,{
-        location:{
-            type: "Point",
-            coordinates:[lng,lat]
-        }
-    },{new:true}) ;
-    if(!user) return res.error("User not Found")
-    return res.success("Location Updated Successfully")
+    const { lat, lng, address, city, state } = req.body;
+    const userId = req.userId;
+    
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.error("User not Found");
+    }
+    const locationUpdate = {
+      ...currentUser.location?.toObject?.() || currentUser.location || {},
+      type: "Point",
+      coordinates: [lng, lat],
+    };
+
+    if (address !== undefined && address !== null && address !== "") {
+      locationUpdate.address = address;
+    }
+
+    if (city !== undefined && city !== null && city !== "") {
+      locationUpdate.city = city;
+    }
+
+    if (state !== undefined && state !== null && state !== "") {
+      locationUpdate.state = state;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId, 
+      { location: locationUpdate }, 
+      { new: true }
+    );
+    
+    return res.success("Location Updated Successfully", user);
   } catch (err) {
     return res.error('Error while updating user location', err);
   }
