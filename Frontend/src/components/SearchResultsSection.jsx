@@ -6,7 +6,7 @@ const SearchResultsSection = ({ items = [], renderItem, title = "Search Results"
   }
 
   return (
-    <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-5 bg-white shadow-md rounded-2xl mt-4">
+    <div className="w-full flex flex-col gap-5 items-start p-5 px-4 md:px-6 lg:px-8 bg-white shadow-md rounded-2xl mt-4">
       <h1 className="text-gray-900 text-2xl sm:text-3xl font-semibold border-b border-gray-200 pb-2 w-full">
         {title}
       </h1>

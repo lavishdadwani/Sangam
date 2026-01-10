@@ -3,25 +3,17 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import { IoLocationSharp, IoSearchOutline } from "react-icons/io5";
 import { MdDeliveryDining } from "react-icons/md";
 import { TbCurrentLocation } from "react-icons/tb";
-import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import "leaflet/dist/leaflet.css"
 import { setAddress, setLocation } from "../redux/mapSlice";
 import getCityName, { getAddressByLatLng } from "../../services/helpers";
 import { FaMobileScreenButton } from "react-icons/fa6";
 import { FaCreditCard } from "react-icons/fa";
 import ButtonSquare from "../components/ButtonSquare";
+import MapContainer from "../components/MapContainer";
 import OrderApi from "../../services/order"
 import { openSnackbar } from "../redux/snackbarSlice";
 import { addMyOrder } from "../redux/userSlice";
-const RecenterMap = ({location}) =>{
-    if(location.lat && location.lng){
-        const map = useMap()
-        map.setView([location.lat,location.lng],16,{animate:true})
-    }
-    return null
-}
 const CheckOut = () => {
     const {location, address} = useSelector(state => state.map)
     const {cartItems,totalAmount, userData} = useSelector(state => state.user)
@@ -184,18 +176,12 @@ const CheckOut = () => {
                 <TbCurrentLocation size={17} />
             </button>
           </div>
-          <div className="rounded-xl border overflow-hidden">
-            <div className="h-64 w-full flex items-center justify-center">
-                <MapContainer className={"w-full h-full"} center={[location?.lat, location?.lng]} zoom={16}>
-                <TileLayer
-    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-  />
-  <RecenterMap location={location} /> 
-  <Marker position={[location?.lat, location?.lng]} draggable eventHandlers={{dragend:onDragEnd}}/>
-                </MapContainer>
-            </div>
-          </div>
+          <MapContainer
+            location={location}
+            onDragEnd={onDragEnd}
+            draggable={true}
+            height="256px"
+          />
         </section>
 
         <section>
