@@ -13,6 +13,7 @@ import orderRouter from "./routes/order.routes.js";
 import http from "http"
 import { Server } from "socket.io";
 import { socketHandler } from "./socket.js";
+import { initRedis, closeRedis } from "./redis.js";
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -39,6 +40,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Available for all routes via req.app.get('redis')
+app.set("redis", null); // Will set after Redis connection
+
 app.response.success = function (
   message,
   data,
@@ -51,7 +55,7 @@ app.response.success = function (
     Response("success", message, data, displayMessage, code, additionalData)
   );
 };
-
+// global error handler
 app.response.error = function (
   message,
   data,
@@ -69,12 +73,12 @@ app.response.error = function (
     Response("error", newMessage, data, displayMessage, code, additionalData)
   );
 };
-
+// access denied
 app.response.accessDenied = function () {
   console.log(chalk.cyan("Access Denied. Check the role of the User."));
   this.status(200).send(Response("error", "Access Denied", null, null, 500));
 };
-
+// unauthorized user
 app.response.unauthorized = function (message) {
   console.log(chalk.yellow("Unauthorized User"));
   this.status(403).send(
@@ -104,11 +108,19 @@ app.use((err, req, res, next) => {
   });
 });
 
-socketHandler(io)
 // Start server
 server.listen(port, async () => {
   try {
     await dbConnect();
+    
+    const redisClient = await initRedis();
+    if (redisClient) {
+      app.set("redis", redisClient);
+      io.redis = redisClient;
+    }
+    
+    socketHandler(io);
+    
     console.log(chalk.green(`✅ Server started at port ${port}`));
   } catch (error) {
     console.error(chalk.red("❌ Failed to start server:"), error);
@@ -116,13 +128,15 @@ server.listen(port, async () => {
   }
 });
 
-// Graceful shutdown 
-process.on("SIGTERM", () => {
+//  shutdown 
+process.on("SIGTERM", async () => {
   console.log(chalk.yellow("SIGTERM signal received: closing HTTP server"));
+  await closeRedis();
   process.exit(0);
 });
 
-process.on("SIGINT", () => {
+process.on("SIGINT", async () => {
   console.log(chalk.yellow("SIGINT signal received: closing HTTP server"));
+  await closeRedis();
   process.exit(0);
 });

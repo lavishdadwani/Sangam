@@ -5,6 +5,7 @@ import User from "../models/user.model.js";
 import { sendDeliveryOtpMail } from "../utils/mail.js";
 import Razorpay from "razorpay";
 import dotenv from "dotenv";
+import { ORDER_STATUS, canOwnerSetStatus } from "../constants/orderStatus.js";
 
 let instance = new Razorpay({
   key_id: process.env.RAZORPAY_API_KEY,
@@ -214,10 +215,17 @@ export const UpdateOrderStatus = async (req, res) => {
     if (!order) return res.error("Order not found.");
     const shopOrder = order.shopOrders.find((o) => o.shop == shopId);
     if (!shopOrder) return res.error("Shop Order not found.");
+    
+    
+    // Validate that owner can set this status
+    if (!canOwnerSetStatus(status)) {
+      return res.error(`The owner cannot manually set the status to '${status}'`);
+    }
+    
     shopOrder.status = status;
 
     let deliveryBoyPayload = [];
-    if (status === "out for delivery" && !shopOrder.assignment) {
+    if (status === ORDER_STATUS.AWAITING_PICKUP && !shopOrder.assignment) {
       const { longitude, latitude } = order.deliveryAddress;
       const nearByDeliveryBoys = await User.find({
         role: "deliveryBoy",
@@ -292,7 +300,7 @@ export const UpdateOrderStatus = async (req, res) => {
         });
       }
     }
-    // Save the parent order document - this will save all subDocuments including shopOrder
+    // Save the parent order document 
     await order.save();
     const updatedShopOrder = order.shopOrders.find((o) => o.shop == shopId);
 
@@ -387,7 +395,63 @@ export const acceptOrder = async (req, res) => {
     }
     let shopOrder = order.shopOrders.id(assignment.shopOrderId);
     shopOrder.assignedDeliveryBoy = userId;
+    
+    // if (shopOrder.status === ORDER_STATUS.AWAITING_PICKUP) {
+    //   shopOrder.status = ORDER_STATUS.OUT_FOR_DELIVERY;
+    // }
+      shopOrder.status = ORDER_STATUS.OUT_FOR_DELIVERY;
+    
     await order.save();
+     
+    const deliveryBoy = await User.findById(userId);
+    if (deliveryBoy && deliveryBoy.socketId) {
+      const io = req.app.get("io");
+      
+      if (io) {
+        const orderId = order._id.toString();
+        const roomName = `order:${orderId}`;
+        
+        const deliveryBoySocket = io.sockets.sockets.get(deliveryBoy.socketId);
+        if (deliveryBoySocket) {
+          deliveryBoySocket.join(roomName);
+          console.log(`👤 Delivery boy ${userId} (socket: ${deliveryBoy.socketId}) joined order room: ${roomName}`);
+        } else {
+          console.log(`⚠️  Delivery boy socket ${deliveryBoy.socketId} not found. They may not be connected.`);
+        }
+        
+        if (io.redis) {
+          try {
+            const orderIdsKey = `delivery:orders:${userId}`;
+            await io.redis.sAdd(orderIdsKey, orderId);
+            await io.redis.expire(orderIdsKey, 86400); // 24 hours TTL
+            console.log(`✅ Tracked order ${orderId} in Redis for delivery boy ${userId}`);
+          } catch (redisErr) {
+            console.error('Error tracking order assignment in Redis:', redisErr);
+          }
+        }
+      }
+      
+      // Update delivery boy location in DB when accepting order
+      if (io && io.redis) {
+        try {
+          const locationKey = `delivery:location:${userId}`;
+          const cachedLocation = await io.redis.get(locationKey);
+          if (cachedLocation) {
+            const location = JSON.parse(cachedLocation);
+            
+            await User.findByIdAndUpdate(userId, {
+              location: {
+                type: "Point",
+                coordinates: [location.longitude, location.latitude]
+              }
+            });
+          }
+        } catch (redisErr) {
+          console.error('Error syncing location from Redis to DB:', redisErr);
+        }
+      }
+    }
+    
     return res.success("Order Accepted Successfully");
   } catch (err) {
     console.error(err);
@@ -514,7 +578,7 @@ export const verifyDeliveryOtp = async (req, res) => {
     ) {
       return res.error("Invalid/Expired Otp");
     }
-    shopOrder.status = "delivered";
+    shopOrder.status = ORDER_STATUS.DELIVERED;
     shopOrder.deliveredAt = Date.now();
     await order.save();
     await DeliveryAssignment.deleteOne({
@@ -522,6 +586,46 @@ export const verifyDeliveryOtp = async (req, res) => {
       order: order._id,
       assignedTo: shopOrder.assignedDeliveryBoy,
     });
+
+    if (shopOrder.assignedDeliveryBoy) {
+      const deliveryBoyId = shopOrder.assignedDeliveryBoy;
+      const orderId = order._id.toString();
+      const io = req.app.get("io");
+      
+      // Remove delivery boy from order room
+      if (io) {
+        const deliveryBoy = await User.findById(deliveryBoyId);
+        if (deliveryBoy && deliveryBoy.socketId) {
+          const roomName = `order:${orderId}`;
+          io.sockets.sockets.get(deliveryBoy.socketId)?.leave(roomName);
+          io.to(deliveryBoy.socketId).emit("leaveOrderRoom", { orderId });
+        }
+      }
+      
+      if (io && io.redis) {
+        try {
+          const locationKey = `delivery:location:${deliveryBoyId}`;
+          const cachedLocation = await io.redis.get(locationKey);
+          if (cachedLocation) {
+            const location = JSON.parse(cachedLocation);
+            // Update DB with final delivery location
+            await User.findByIdAndUpdate(deliveryBoyId, {
+              location: {
+                type: "Point",
+                coordinates: [location.longitude, location.latitude]
+              }
+            });
+          }
+          
+          // Clean up Redis data for this order
+          await io.redis.del(locationKey);
+          await io.redis.sRem(`delivery:orders:${deliveryBoyId}`, orderId);
+          await io.redis.del(`order:rooms:${orderId}`);
+        } catch (redisErr) {
+          console.error('Error syncing final location from Redis to DB:', redisErr);
+        }
+      }
+    }
 
     return res.success("Order Delivered Successfully");
   } catch (err) {
@@ -537,14 +641,14 @@ export const getTodayDeliveries = async (req, res) => {
     startsOfDay.setHours(0,0,0,0)
     const orders = await Order.find({
         "shopOrders.assignedDeliveryBoy":deliveryBoyId,
-        "shopOrders.status":"delivered",
+        "shopOrders.status": ORDER_STATUS.DELIVERED,
         "shopOrders.deliveredAt":{$gte:startsOfDay},
     }).lean() ;
 
     let todaysDeliveries = []
     orders.forEach(order =>{
         order.shopOrders.forEach(shopOrder =>{
-            if(shopOrder.assignedDeliveryBoy == deliveryBoyId && shopOrder.status == "delivered" && shopOrder.deliveredAt && shopOrder.deliveredAt >= startsOfDay ){
+            if(shopOrder.assignedDeliveryBoy == deliveryBoyId && shopOrder.status === ORDER_STATUS.DELIVERED && shopOrder.deliveredAt && shopOrder.deliveredAt >= startsOfDay ){
                 todaysDeliveries.push(shopOrder)
             }
         })

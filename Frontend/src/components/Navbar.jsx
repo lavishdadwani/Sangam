@@ -152,11 +152,11 @@ const Nav = ({ userData, currentCity,shopData, cartItems = [], myOrders = [] }) 
               </>
             )}
             <button 
-              className="hidden md:flex items-center gap-2 relative px-4 py-2 bg-gray-50 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors duration-200" 
+              className="hidden md:flex items-center gap-2 relative px-4 py-2 bg-[#ff4d2d]/10 text-[#ff4d2d] font-medium rounded-lg hover:bg-[#ff4d2d]/20 transition-colors duration-200" 
               onClick={()=> navigate("my-orders")}
             >
               <TbReceipt2 size={18} />
-              <span>Orders</span>
+              <span>Orders </span>
               {myOrders?.length > 0 && (
                 <span className="absolute -right-1.5 -top-1.5 text-[10px] font-semibold text-white bg-[#ff4d2d] rounded-full w-5 h-5 flex items-center justify-center">
                   {myOrders.length}
