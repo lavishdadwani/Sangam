@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ORDER_STATUS_VALUES, ORDER_STATUS } from "../constants/orderStatus.js";
 
 const Schema = mongoose.Schema;
 const shopOrderItemsSchema = new mongoose.Schema(
@@ -27,8 +28,8 @@ const shopOrderSchema = new mongoose.Schema(
     shopOrderItems: [shopOrderItemsSchema],
     status:{
         type:String,
-        enum:['pending','preparing', 'out for delivery', 'delivered'],
-        default:'pending'
+        enum: ORDER_STATUS_VALUES,
+        default: ORDER_STATUS.PENDING
     },
     assignment:{
         type: mongoose.Schema.Types.ObjectId,
