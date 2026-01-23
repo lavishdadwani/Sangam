@@ -219,7 +219,7 @@ const DeliveryBoy = () => {
 useEffect(() => {
   if (socket) {
     socket.on("newAssignment", (data) => {
-      console.log({data});
+      // console.log({data});
       if(data.sentTo === userData._id){
         setAvailableAssignments(prev => [...prev, data]);
       }

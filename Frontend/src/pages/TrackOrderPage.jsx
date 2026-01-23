@@ -32,28 +32,41 @@ const TrackOrderPage = () => {
         );
       }
     } catch (err) {
-      console.error(err);
       dispatch(openSnackbar(err.message, "error"));
     }
   };
 
+  // Join order room when order is loaded and listen for location updates
   useEffect(() => {
-    if (socket) {
-      socket.on("updateDeliveryLocation", ({deliveryBoyId, latitude, longitude}) => {
+    if (socket && currentOrder?._id) {
+      const orderId = currentOrder._id.toString();
+      
+      // console.log(`🔌 Joining order room: ${orderId} Socket ID: ${socket.id}`);
+      socket.emit("joinOrderRoom", { orderId });
+      // delivery boy location updates
+      socket.on("updateDeliveryLocation", ({deliveryBoyId, latitude, longitude, orderId: receivedOrderId}) => {
+        // console.log(`📍 Received location update for delivery boy ${deliveryBoyId} in order ${receivedOrderId}:`, {latitude, longitude});
         setLiveLocation(prev => ({...prev, [deliveryBoyId]: {lat: latitude, lng: longitude}}));
       });
+      
+      // Cleanup: Leave room and remove listener
       return () => {
+        // console.log(`🔌 Leaving order room: ${orderId}`);
+        socket.emit("leaveOrderRoom", { orderId });
         socket.off("updateDeliveryLocation");
       };
     }
-  }, [socket]);
-
+  }, [socket, currentOrder?._id]);
+ const backButtonAction = () =>{
+  navigate('/my-orders')
+ }
   return (
     <div className="min-h-screen bg-[#fff9f6] pt-24 pb-12">
       <div className="max-w-4xl mx-auto px-4 md:px-6">
         <PageHeader
           title="Track Order"
           icon={MdDeliveryDining}
+          backButtonAction={backButtonAction}
         />
 
         {/* Order Cards */}
