@@ -4,7 +4,7 @@ import OrderAPI from "../../services/order";
 import { useDispatch } from "react-redux";
 import { openSnackbar } from "../redux/snackbarSlice";
 import { updateOrderStatus } from "../redux/userSlice";
-import { ORDER_STATUSES, OWNER_SELECTABLE_STATUSES, getOrderStatusLabel, getNextAvailableStatuses, canChangeStatus } from "../constants/orderStatus";
+import { ORDER_STATUSES, OWNER_SELECTABLE_STATUSES, OWNER_VISIBLE_STATUSES, getOrderStatusLabel, getNextAvailableStatuses, canChangeStatus } from "../constants/orderStatus";
 import StatusBadge from "./StatusBadge";
 
 const OwnerOrderCard = ({ data }) => {
@@ -110,18 +110,24 @@ const OwnerOrderCard = ({ data }) => {
             disabled={updating}
             value={currentStatus || ""}
           >
-            {OWNER_SELECTABLE_STATUSES.map((status) => {
+            {OWNER_VISIBLE_STATUSES.map((status) => {
               const isPrevious = status.order < currentOrder;
               const isCurrent = status.value === currentStatus;
-              const isDisabled = isPrevious || isCurrent;
+              const isOwnerSelectable = OWNER_SELECTABLE_STATUSES.some(s => s.value === status.value);
+              const isDisabled = isPrevious || isCurrent || !isOwnerSelectable;
               
               return (
                 <option 
                   key={status.value} 
                   value={status.value}
                   disabled={isDisabled}
+                  style={!isOwnerSelectable ? { color: '#9ca3af', fontStyle: 'italic' } : {}}
                 >
-                  {isCurrent ? `Current: ${status.label}` : status.label}
+                  {isCurrent 
+                    ? `Current: ${status.label}` 
+                    : !isOwnerSelectable 
+                      ? `${status.label} (Auto)` 
+                      : status.label}
                 </option>
               );
             })}
@@ -130,7 +136,7 @@ const OwnerOrderCard = ({ data }) => {
       </div>
 
     {/* DELIVERY BOYS */}
-    {data?.shopOrders?.status === "out for delivery" && (
+    {(data?.shopOrders?.status === "awaiting pickup" || data?.shopOrders?.status === "out for delivery") && (
       <div className="mt-3 p-4 bg-orange-50 border border-orange-200 rounded-lg shadow-sm text-sm">
         {data.shopOrders.assignedDeliveryBoy ? (<p className="font-medium text-gray-800 mb-2">
           Assigned Delivery Boys:

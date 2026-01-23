@@ -3,6 +3,19 @@ import bcrypt from "bcryptjs";
 import generateToken from "../utils/token.js";
 import { sendOtpMail } from "../utils/mail.js";
 
+
+const invalidateUserCache = async (req, userId) => {
+  const redis = req.app.get('redis');
+  if (redis && userId) {
+    try {
+      await redis.del(`user:${userId}`);
+      await redis.del(`user:location:${userId}`);
+    } catch (err) {
+      console.error('Error invalidating user cache:', err);
+    }
+  }
+};
+
 export const signUp = async (req, res) => {
   try {
     const { fullName, mobile, email, role, password } = req.body;
@@ -171,6 +184,10 @@ export const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     user.isOtpVerified = false;
     await user.save();
+    
+    // Invalidate user cache after password change
+    await invalidateUserCache(req, user._id.toString());
+    
     return res.status(200).json({ message: "Password reset successfully" });
   } catch (err) {
     console.error("Reset Password Error:", err);
@@ -211,10 +228,37 @@ export const getCurrentUser = async (req,res) =>{
         if(!userId){
             return res.error('User ID not found');
         }
+        
+        // Check Redis cache first
+        const redis = req.app.get('redis');
+        if (redis) {
+          try {
+            const cacheKey = `user:${userId}`;
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+              const userData = JSON.parse(cached);
+              return res.success('User retrieved successfully.', userData);
+            }
+          } catch (redisErr) {
+            console.error('Redis cache read error:', redisErr);
+          }
+        }
+        
         const user = await User.findById(userId)
         if(!user){
             return res.error('User not found');
         }
+        
+        if (redis) {
+          try {
+            const cacheKey = `user:${userId}`;
+            const userObject = user.toObject ? user.toObject() : user;
+            await redis.set(cacheKey, JSON.stringify(userObject), { EX: 1800 }); // 30 min TTL
+          } catch (redisErr) {
+            console.error('Redis cache write error:', redisErr);
+          }
+        }
+        
         return res.success('User retrieved successfully.', user);
     }catch(err){
         return res.error('Error while retrieving current user', err);
@@ -253,6 +297,29 @@ export const updateUserLocation = async (req, res) => {
       { location: locationUpdate }, 
       { new: true }
     );
+    // Redis Code
+    // Cache location in Redis
+    const redis = req.app.get('redis');
+    if (redis) {
+      try {
+        const redisKey = `user:location:${userId}`;
+        const cacheData = {
+          lat,
+          lng,
+          address: locationUpdate.address,
+          city: locationUpdate.city,
+          state: locationUpdate.state,
+          coordinates: locationUpdate.coordinates,
+        };
+        await redis.set(redisKey, JSON.stringify(cacheData), { EX: 3600 }); // 1 hour TTL
+        
+        const userCacheKey = `user:${userId}`;
+        const userObject = user.toObject ? user.toObject() : user;
+        await redis.set(userCacheKey, JSON.stringify(userObject), { EX: 1800 }); // 30 min TTL
+      } catch (redisErr) {
+        console.error('Redis cache write error:', redisErr);
+      }
+    }
     
     return res.success("Location Updated Successfully", user);
   } catch (err) {

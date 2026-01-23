@@ -1,5 +1,5 @@
 import React from "react";
-import { FaCheckCircle, FaClock, FaTruck } from "react-icons/fa";
+import { FaCheckCircle, FaClock, FaTruck, FaBox } from "react-icons/fa";
 import { MdPending } from "react-icons/md";
 
 const StatusBadge = ({ status, showIcon = true, className = "" }) => {
@@ -12,6 +12,15 @@ const StatusBadge = ({ status, showIcon = true, className = "" }) => {
           textClass: "text-green-600",
           bgClass: "bg-green-50",
           borderClass: "border-green-200",
+        };
+      case "awaiting pickup":
+        return {
+          icon: FaBox,
+          iconClass: "text-purple-600 animate-pulse",
+          textClass: "text-purple-600",
+          bgClass: "bg-purple-50",
+          borderClass: "border-purple-200",
+          animationStyle: { animationDuration: '2s' },
         };
       case "out for delivery":
         return {

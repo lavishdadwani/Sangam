@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { setLocation, setAddress } from "../redux/mapSlice";
 import { setCurrentCity, setCurrentState, setCurrentAddress, setUserData } from "../redux/userSlice";
 import getCityName, { getAddressByLatLng } from "../../services/helpers";
-import userAPI from "../../services/user/user";
 import { IoLocationSharp, IoSearchOutline } from "react-icons/io5";
 import { TbCurrentLocation } from "react-icons/tb";
 import { FaLocationDot } from "react-icons/fa6";
@@ -12,6 +11,13 @@ import MapContainer from "./MapContainer";
 import ButtonSquare from "./ButtonSquare";
 import InputText from "./InputText";
 import { openSnackbar } from "../redux/snackbarSlice";
+import {
+  saveLocationToStorage,
+  getLocationFromStorage,
+  updateLocationInDB,
+  forceSyncLocationToDB,
+  initializeLocation,
+} from "../../services/locationService";
 
 const LocationSelector = () => {
   const dispatch = useDispatch();
@@ -23,30 +29,32 @@ const LocationSelector = () => {
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Initialize location from userData when component mounts or userData changes
+  // Initialize location from localStorage or userData when component mounts
   useEffect(() => {
-    if (userData?.location?.coordinates) {
-      const [lng, lat] = userData.location.coordinates;
-      if (lat !== 0 || lng !== 0) {
-        if (!location?.lat || !location?.lng || (location.lat === 0 && location.lng === 0)) {
-          dispatch(setLocation({ lat, lng }));
+    if (!location?.lat || !location?.lng || (location.lat === 0 && location.lng === 0)) {
+      const initialLocation = initializeLocation(userData);
+      
+      if (initialLocation) {
+        dispatch(setLocation({ lat: initialLocation.lat, lng: initialLocation.lng }));
+        if (initialLocation.address) {
+          dispatch(setAddress(initialLocation.address));
+          setAddressInput(initialLocation.address);
         }
-        if (userData.location.address && !address) {
-          dispatch(setAddress(userData.location.address));
-          setAddressInput(userData.location.address);
+        if (initialLocation.city) {
+          dispatch(setCurrentCity(initialLocation.city));
         }
-        if (userData.location.city && !currentCity) {
-          dispatch(setCurrentCity(userData.location.city));
+        if (initialLocation.state) {
+          dispatch(setCurrentState(initialLocation.state));
         }
-        if (userData.location.state && !currentState) {
-          dispatch(setCurrentState(userData.location.state));
+      } else if (userData?.location?.coordinates) {
+        const [lng, lat] = userData.location.coordinates;
+        if (lat === 0 && lng === 0) {
+          dispatch(setLocation({ lat: 0, lng: 0 }));
+          setIsModalOpen(true);
         }
-      } else {
-        dispatch(setLocation({ lat: 0, lng: 0 }));
-        setIsModalOpen(true);
       }
     }
-  }, [userData?.location?.coordinates]);
+  }, []);
 
   useEffect(() => {
     if (address) {
@@ -92,13 +100,28 @@ const LocationSelector = () => {
     }
   };
 
-  const onDragEnd = (e) => {
+  const onDragEnd = async (e) => {
     const { lat, lng } = e.target._latlng;
     dispatch(setLocation({ lat, lng }));
-    getAddressLatLng(lat, lng);
+    await getAddressLatLng(lat, lng);
+    
+    // Save to localStorage immediately (instant access)
+    const locationData = {
+      lat,
+      lng,
+      address: address,
+      city: currentCity,
+      state: currentState,
+    };
+    saveLocationToStorage(locationData);
+    
+    // Debounced DB update 
+    updateLocationInDB(locationData, false).catch((err) => {
+      console.error("Background location update failed:", err);
+    });
   };
 
-  const getCurrentLocation = () => {
+  const getCurrentLocation = async () => {
     if (!navigator.geolocation) {
       dispatch(openSnackbar("Geolocation is not supported by your browser", "error"));
       return;
@@ -111,6 +134,21 @@ const LocationSelector = () => {
         const longitude = position.coords.longitude;
         dispatch(setLocation({ lat: latitude, lng: longitude }));
         await getAddressLatLng(latitude, longitude);
+        
+        // Save to localStorage immediately
+        const locationData = {
+          lat: latitude,
+          lng: longitude,
+          address: address,
+          city: currentCity,
+          state: currentState,
+        };
+        saveLocationToStorage(locationData);
+        
+        // Debounced DB update
+        updateLocationInDB(locationData, false).catch((err) => {
+          console.error("Background location update failed:", err);
+        });
       },
       (error) => {
         console.error("Geolocation error:", error);
@@ -155,6 +193,21 @@ const LocationSelector = () => {
     if (suggestion.lat && suggestion.lon) {
       dispatch(setLocation({ lat: suggestion.lat, lng: suggestion.lon }));
       await getAddressLatLng(suggestion.lat, suggestion.lon);
+      
+      // Save to localStorage immediately
+      const locationData = {
+        lat: suggestion.lat,
+        lng: suggestion.lon,
+        address: address,
+        city: currentCity,
+        state: currentState,
+      };
+      saveLocationToStorage(locationData);
+      
+      // Debounced DB update
+      updateLocationInDB(locationData, false).catch((err) => {
+        console.error("Background location update failed:", err);
+      });
     }
   };
 
@@ -170,21 +223,18 @@ const LocationSelector = () => {
       const locationData = {
         lat: location.lat,
         lng: location.lng,
+        address: address && address.trim() !== "" ? address.trim() : null,
+        city: currentCity && currentCity.trim() !== "" ? currentCity.trim() : null,
+        state: currentState && currentState.trim() !== "" ? currentState.trim() : null,
       };
 
-      if (address && address.trim() !== "") {
-        locationData.address = address.trim();
-      }
-      if (currentCity && currentCity.trim() !== "") {
-        locationData.city = currentCity.trim();
-      }
-      if (currentState && currentState.trim() !== "") {
-        locationData.state = currentState.trim();
-      }
-            const result = await userAPI.updateLocation(locationData);
+      // Save to localStorage 
+      saveLocationToStorage(locationData);
+      
+      // Force DB update
+      const result = await forceSyncLocationToDB(locationData);
       
       if (result.ok) {
-
         if (result.data?.data) {
           dispatch(setUserData(result.data.data));
         } else {
@@ -193,9 +243,9 @@ const LocationSelector = () => {
             location: {
               ...userData.location,
               coordinates: [location.lng, location.lat], // MongoDB format: [lng, lat]
-              address: address || userData.location?.address || null,
-              city: currentCity || userData.location?.city || null,
-              state: currentState || userData.location?.state || null,
+              address: locationData.address || userData.location?.address || null,
+              city: locationData.city || userData.location?.city || null,
+              state: locationData.state || userData.location?.state || null,
             },
           };
           dispatch(setUserData(updatedUserData));

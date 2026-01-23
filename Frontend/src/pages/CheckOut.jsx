@@ -13,10 +13,11 @@ import ButtonSquare from "../components/ButtonSquare";
 import MapContainer from "../components/MapContainer";
 import OrderApi from "../../services/order"
 import { openSnackbar } from "../redux/snackbarSlice";
-import { addMyOrder } from "../redux/userSlice";
+import { addMyOrder, setCurrentCity, setCurrentState } from "../redux/userSlice";
+import { saveLocationToStorage, forceSyncLocationToDB } from "../../services/locationService";
 const CheckOut = () => {
     const {location, address} = useSelector(state => state.map)
-    const {cartItems,totalAmount, userData} = useSelector(state => state.user)
+    const {cartItems,totalAmount, userData, currentCity, currentState} = useSelector(state => state.user)
     const [addressInput, setAddressInput] = useState("")
     const [paymentMethod, setPaymentMethod] = useState("cod")
     const [loading, setLoading] = useState(false)
@@ -30,20 +31,36 @@ const CheckOut = () => {
     //     setSearchLocation(address)
     // }, [address]);
 
-    const onDragEnd = (e) => {
+    const onDragEnd = async (e) => {
         const {lat,lng} = e.target._latlng
         dispatch(setLocation({lat,lng}))
-        getAddressLatLng(lat,lng)
-        // map.setView([lat,lng],16,{animate:true})
+        await getAddressLatLng(lat,lng)
+        
+        // Save to localStorage 
+        const locationData = {
+            lat,
+            lng,
+            address: address,
+            city: currentCity,
+            state: currentState,
+        };
+        saveLocationToStorage(locationData);
     }
 
     const  getAddressLatLng = async (lat,lng) =>{
         try{
             const result = await getCityName(lat,lng)
-          if (result) {
+          if (result && result?.results.length > 0) {
             const cityName = result.results[0].city
             const stateName = result.results[0].state
-            dispatch(setAddress(result.results[0].address_line2 || result.results[0].address_line1))
+            const addressText = result.results[0].address_line2 || result.results[0].address_line1
+            dispatch(setAddress(addressText))
+            if (cityName) {
+                dispatch(setCurrentCity(cityName))
+            }
+            if (stateName) {
+                dispatch(setCurrentState(stateName))
+            }
           }
         }catch(err){
             console.error(err);
@@ -60,10 +77,10 @@ const CheckOut = () => {
     const  getLatLngByAddress = async () =>{
         try{
             const result = await getAddressByLatLng(addressInput)
-            console.log({result});
+            // console.log({result});
           if (result) {
             const {lat,lon} = result.results[0]
-            console.log(lat,lon);
+            // console.log(lat,lon);
             dispatch(setLocation({lat,lng:lon}))
           }
         }catch(err){
@@ -78,6 +95,27 @@ const CheckOut = () => {
     const handlePlaceOrder = async () => {
       try {
         setLoading(true)
+        
+        if (location?.lat && location?.lng && (location.lat !== 0 || location.lng !== 0)) {
+            const locationData = {
+                lat: location.lat,
+                lng: location.lng,
+                address: addressInput && addressInput.trim() !== "" ? addressInput.trim() : address,
+                city: currentCity,
+                state: currentState,
+            };
+            
+            // Save to localStorage
+            saveLocationToStorage(locationData);
+            
+            // Force save to DB
+            try {
+                await forceSyncLocationToDB(locationData);
+            } catch (err) {
+                console.error("Location sync failed, but continuing with order:", err);
+            }
+        }
+        
         const data = {
             paymentMethod,
             deliveryAddress:{
