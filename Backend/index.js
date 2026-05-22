@@ -14,7 +14,7 @@ import http from "http"
 import { Server } from "socket.io";
 import { socketHandler } from "./socket.js";
 import { initRedis, closeRedis } from "./redis.js";
-
+import chatbotRoutes from "./chatbot/chatbot.routes.js"
 const port = process.env.PORT || 5000;
 const app = express();
 const server = http.createServer(app)
@@ -90,6 +90,7 @@ app.use("/api/auth/user", userRouter);
 app.use("/api/auth/shop", shopRouter);
 app.use("/api/auth/item", itemRouter);
 app.use("/api/auth/order", orderRouter);
+app.use("/api/auth/chat", chatbotRoutes);
 app.get("/", async (req, res) => {
   res.status(200).json({ message: "Server is running" });
 });

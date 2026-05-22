@@ -24,6 +24,7 @@ import TrackOrderPage from './pages/TrackOrderPage'
 import Shop from './pages/Shop'
 import { setSocket } from './redux/userSlice'
 import { io } from 'socket.io-client'
+import Chatbot from './components/Chatbot'
 
 function App() {
   const { userData } = useSelector((state) => state.user)
@@ -70,6 +71,7 @@ function App() {
   return (
     <>
       <Snackbar />
+      {userData?.role === "user" && <Chatbot />}
       <Routes>
         <Route path="/" element={userData ? <Home /> : <Navigate to="/signIn" />} />
         <Route path="/signIn" element={!userData ? <SignIn /> : <Navigate to="/" />} />

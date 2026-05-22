@@ -97,7 +97,6 @@ export const initRedis = async () => {
           await client.quit();
         }
       } catch (cleanupErr) {
-        // cleanup errors
       }
       client = null;
     }
@@ -106,6 +105,17 @@ export const initRedis = async () => {
   }
 };
 
+
+/**
+ * Get the current Redis client instance
+ * @returns {RedisClient|null} Redis client instance or null if not connected
+ */
+export const getRedis = () => {
+  if (client && client.isOpen) {
+    return client;
+  }
+  return null;
+};
 
 /**
  * Close Redis connection
