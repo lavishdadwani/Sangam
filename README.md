@@ -1,6 +1,6 @@
 # Food Delivery (Mini Mart)
 
-A full-stack food delivery platform with role-based dashboards for **customers**, **restaurant owners**, and **delivery partners**. Users can browse local restaurants, place multi-shop orders, pay via Razorpay, track deliveries in real time on a map, and get help from an AI chatbot powered by Google Gemini.
+A full-stack food delivery platform with role-based dashboards for **customers**, **restaurant Owners**, and **delivery partners**. Users can browse local restaurants, place multi-shop orders, pay via Razorpay, track deliveries in real time on a map, and get help from an AI chatbot powered by Google Gemini.
 
 ---
 
@@ -30,7 +30,7 @@ Sangam Delivery connects three user types in a single application:
 | Role | Description |
 |------|-------------|
 | **User** | Browse food by city, search items, manage cart, checkout, track orders, chat with support bot |
-| **Owner** | Create and manage a shop, add/edit menu items, accept orders, update preparation status |
+| **Restaurant Owner** | Create and manage a shop, add/edit menu items, accept orders, update preparation status |
 | **Delivery Boy** | View assignments, accept deliveries, share live GPS location, verify delivery via OTP |
 
 The **Backend** is an Express 5 API with MongoDB, Redis, Socket.IO, and integrations for payments (Razorpay), media (Cloudinary), email (Nodemailer), and AI (Gemini). The **Frontend** is a React 19 + Vite SPA with Redux, Tailwind CSS, Leaflet maps, and Firebase for Google sign-in.
@@ -43,7 +43,7 @@ The **Backend** is an Express 5 API with MongoDB, Redis, Socket.IO, and integrat
 - Email/password sign-up and sign-in with JWT stored in HTTP-only cookies
 - Google OAuth via Firebase
 - Forgot password flow with email OTP verification
-- Role selection at registration: `user`, `owner`, or `deliveryBoy`
+- Role selection at registration: `user`, `Restaurant Owner`, or `deliveryBoy`
 - Location stored per user (GeoJSON point) with city-based discovery
 
 ### Customer (User)
@@ -129,7 +129,7 @@ flowchart TB
         G --> H[Track Order on Map]
     end
 
-    subgraph OwnerFlow
+    subgraph Restaurant OwnerFlow
         B --> I[Create Shop & Menu]
         I --> J[Receive Orders]
         J --> K[Update Status: preparing / awaiting pickup]
@@ -150,7 +150,7 @@ flowchart TB
 ### Typical order path
 
 1. **User** adds items from one or more shops → checks out → pays via Razorpay.
-2. **Owner** sees the order and moves status through preparation stages.
+2. **Restaurant Owner** sees the order and moves status through preparation stages.
 3. System creates a **delivery assignment**; a **delivery boy** accepts it.
 4. Delivery partner’s GPS is streamed to the user’s **track order** page.
 5. Delivery boy sends OTP; user confirms → order marked **delivered**.
@@ -369,7 +369,7 @@ Base URL: `{SERVER_URL}/api/auth`
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | POST | `/create-edit` | Yes | Create/update shop (multipart image) |
-| GET | `/get-shop` | Yes | Owner’s shop |
+| GET | `/get-shop` | Yes | Restaurant Owner’s shop |
 | GET | `/get-by-city/:city` | Yes | Shops in city |
 
 ### Item (`/item`)
@@ -393,7 +393,7 @@ Base URL: `{SERVER_URL}/api/auth`
 | POST | `/verify-payment` | Yes | Confirm Razorpay payment |
 | GET | `/orders` | Yes | List orders (role-aware) |
 | GET | `/order/:orderId` | Yes | Order details |
-| POST | `/update-status/:orderId/:shopId` | Yes | Owner updates shop order status |
+| POST | `/update-status/:orderId/:shopId` | Yes | Restaurant Owner updates shop order status |
 | GET | `/get-assignments` | Yes | Delivery assignments |
 | GET | `/accept-order/:assignmentId` | Yes | Accept delivery |
 | GET | `/current-order` | Yes | Active delivery order |
@@ -440,8 +440,8 @@ Connect to the same host as `VITE_SERVER_URL` with `withCredentials: true`.
 | Status | Set by | Meaning |
 |--------|--------|---------|
 | `pending` | System | Order placed |
-| `preparing` | Owner | Restaurant preparing food |
-| `awaiting pickup` | Owner | Ready for delivery partner |
+| `preparing` | Restaurant Owner | Restaurant preparing food |
+| `awaiting pickup` | Restaurant Owner | Ready for delivery partner |
 | `out for delivery` | System / delivery flow | En route |
 | `delivered` | OTP verification | Completed |
 
