@@ -242,7 +242,7 @@ function SignUp() {
             error={errors.role}
             options={[
               { value: "user", label: "User" },
-              { value: "owner", label: "Owner" },
+              { value: "owner", label: "Shop Owner" },
               { value: "deliveryBoy", label: "Delivery Boy" }
             ]}
             required
