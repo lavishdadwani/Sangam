@@ -1,4 +1,4 @@
-# Sangam Delivery (KT Mart)
+# Food Delivery (Mini Mart)
 
 A full-stack food delivery platform with role-based dashboards for **customers**, **restaurant owners**, and **delivery partners**. Users can browse local restaurants, place multi-shop orders, pay via Razorpay, track deliveries in real time on a map, and get help from an AI chatbot powered by Google Gemini.
 
