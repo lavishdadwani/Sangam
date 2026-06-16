@@ -129,15 +129,47 @@ server.listen(port, async () => {
   }
 });
 
-//  shutdown 
-process.on("SIGTERM", async () => {
-  console.log(chalk.yellow("SIGTERM signal received: closing HTTP server"));
-  await closeRedis();
-  process.exit(0);
-});
+// ✅ GRACEFUL SHUTDOWN HANDLER
+const gracefulShutdown = async (signal) => {
+  console.log(chalk.yellow(`\n${signal} signal received: starting graceful shutdown...`));
+  
+  try {
+    // 1. Stop accepting new connections
+    server.close(async () => {
+      console.log(chalk.blue("✅ HTTP server closed"));
+      
+      try {
+        // 2. Disconnect all socket.io connections
+        io.disconnectSockets();
+        console.log(chalk.blue("✅ Socket.io connections closed"));
+        
+        // 3. Close Redis connection
+        await closeRedis();
+        console.log(chalk.blue("✅ Redis connection closed"));
+        
+        // 4. Close MongoDB connection
+        await import("mongoose").then((m) => m.default.connection.close());
+        console.log(chalk.blue("✅ MongoDB connection closed"));
+        
+        console.log(chalk.green("✅ Graceful shutdown completed"));
+        process.exit(0);
+      } catch (err) {
+        console.error(chalk.red("Error during shutdown:"), err);
+        process.exit(1);
+      }
+    });
 
-process.on("SIGINT", async () => {
-  console.log(chalk.yellow("SIGINT signal received: closing HTTP server"));
-  await closeRedis();
-  process.exit(0);
-});
+    // If server doesn't close after 30 seconds, force exit
+    setTimeout(() => {
+      console.error(chalk.red("❌ Forced shutdown after 30 seconds timeout"));
+      process.exit(1);
+    }, 30000);
+  } catch (err) {
+    console.error(chalk.red("Error in graceful shutdown:"), err);
+    process.exit(1);
+  }
+};
+
+//  ✅ SHUTDOWN HANDLERS
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));

@@ -292,6 +292,8 @@ export const socketHandler = async (io) => {
                             // Clean up mappings
                             await redis.del(`socket:user:${socket.id}`);
                             await redis.del(`user:socket:${userId}`);
+                            // ✅ Clean up location data
+                            await redis.del(`delivery:location:${userId}`);
                         }
                     } catch (redisErr) {
                         console.error('Redis cleanup error:', redisErr);
@@ -302,6 +304,10 @@ export const socketHandler = async (io) => {
                     socketId: null,
                     isOnline: false
                 });
+                
+                // ✅ CLEANUP: Remove all event listeners to prevent memory leaks
+                socket.removeAllListeners();
+                
                 console.log(chalk.red(`🔌 Client disconnected: ${socket.id}`));
             }catch(err){
                 console.error('Disconnect error:', err);

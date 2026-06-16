@@ -13,3 +13,9 @@ dist-ssr
 *.local
 package-lock.json
 .env
+
+# Clinic.js reports
+.clinic/
+
+# Optional
+*.clinic*
