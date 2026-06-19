@@ -1,0 +1,22 @@
+<section class="login-shell">
+  <div class="login-card">
+    <h1>FoodOps Admin</h1>
+    <p>Sign in to manage riders, restaurants, orders, and analytics.</p>
+
+    <form (submit)="onLogin(email, password); $event.preventDefault()">
+      <mat-form-field appearance="fill" class="field">
+        <mat-label>Email</mat-label>
+        <input matInput #email type="email" required placeholder="admin@example.com" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="field">
+        <mat-label>Password</mat-label>
+        <input matInput #password type="password" required placeholder="Password" />
+      </mat-form-field>
+
+      <button type="submit" mat-flat-button color="primary" class="login-button">
+        Sign in
+      </button>
+    </form>
+  </div>
+</section>
