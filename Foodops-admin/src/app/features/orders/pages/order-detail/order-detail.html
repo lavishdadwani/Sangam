@@ -1,0 +1,143 @@
+<div class="detail-page">
+  <div class="back-row">
+    <a routerLink="/orders" mat-button><mat-icon>arrow_back</mat-icon> Back to Orders</a>
+  </div>
+
+  @if (isLoading()) {
+    <div class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+  @if (error()) { <div class="error-banner">{{ error() }}</div> }
+
+  @if (!isLoading() && order()) {
+    <!-- Header -->
+    <div class="order-header card">
+      <div>
+        <h1>Order <span class="mono">#{{ order()!._id | slice:0:12 }}…</span></h1>
+        <p class="meta">
+          Placed {{ order()!.createdAt | date: 'dd MMM yyyy, hh:mm a' }} ·
+          <span class="badge method-{{ order()!.paymentMethod }}">{{ order()!.paymentMethod }}</span>
+          <span class="badge" [class.paid]="order()!.payment" [class.unpaid]="!order()!.payment">
+            {{ order()!.payment ? 'Paid' : 'Unpaid' }}
+          </span>
+        </p>
+      </div>
+      @if (canCancel(order()!)) {
+        <button mat-flat-button color="warn" (click)="forceCancel()">
+          <mat-icon>cancel</mat-icon> Force Cancel Order
+        </button>
+      }
+    </div>
+
+    @if (actionError()) { <div class="error-banner">{{ actionError() }}</div> }
+
+    <div class="content-grid">
+
+      <!-- Left: customer + address -->
+      <div class="left-col">
+        <div class="card info-card">
+          <h3><mat-icon>person</mat-icon> Customer</h3>
+          @if (order()!.user) {
+            <div class="info-row"><mat-icon>badge</mat-icon><span>{{ order()!.user!.fullName }}</span></div>
+            <div class="info-row"><mat-icon>email</mat-icon><span>{{ order()!.user!.email }}</span></div>
+            <div class="info-row"><mat-icon>phone</mat-icon><span>{{ order()!.user!.mobile }}</span></div>
+          } @else {
+            <p class="muted">Customer data unavailable</p>
+          }
+        </div>
+
+        <div class="card info-card">
+          <h3><mat-icon>location_on</mat-icon> Delivery Address</h3>
+          <p>{{ order()!.deliveryAddress.text }}</p>
+          <p class="muted coords">{{ order()!.deliveryAddress.latitude }}, {{ order()!.deliveryAddress.longitude }}</p>
+        </div>
+
+        <div class="card info-card summary-card">
+          <h3><mat-icon>receipt</mat-icon> Summary</h3>
+          <div class="summary-row"><span>Shops</span><strong>{{ order()!.shopOrders.length }}</strong></div>
+          <div class="summary-row"><span>Total</span><strong>₹{{ order()!.totalAmount | number }}</strong></div>
+          @if (order()!.razorpayOrderId) {
+            <div class="summary-row mono-small"><span>Razorpay ID</span><span>{{ order()!.razorpayOrderId }}</span></div>
+          }
+        </div>
+      </div>
+
+      <!-- Right: shop orders -->
+      <div class="shop-orders">
+        @for (so of order()!.shopOrders; track so._id) {
+          <div class="card shop-order-card">
+            <div class="shop-header">
+              @if (so.shop) {
+                <img class="shop-thumb" [src]="so.shop.image" [alt]="so.shop.name" />
+                <div>
+                  <p class="shop-name">{{ so.shop.name }}</p>
+                  <p class="shop-city">{{ so.shop.city }}</p>
+                </div>
+              } @else {
+                <span class="muted">Shop data unavailable</span>
+              }
+              <span class="badge status-{{ statusClass(so.status) }} ml-auto">{{ so.status }}</span>
+            </div>
+
+            <!-- Items -->
+            <div class="items-list">
+              @for (item of so.shopOrderItems; track item._id) {
+                <div class="item-row">
+                  <span class="item-qty">×{{ item.quantity }}</span>
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-price">₹{{ item.price * item.quantity | number }}</span>
+                </div>
+              }
+              <div class="subtotal-row"><span>Subtotal</span><strong>₹{{ so.subTotal | number }}</strong></div>
+            </div>
+
+            <!-- Rider -->
+            <div class="rider-section">
+              <p class="section-label"><mat-icon>delivery_dining</mat-icon> Rider</p>
+              @if (so.assignedDeliveryBoy) {
+                <p>{{ so.assignedDeliveryBoy.fullName }}
+                  <span class="online-dot" [class.is-online]="so.assignedDeliveryBoy.isOnline"></span>
+                </p>
+                <p class="muted">{{ so.assignedDeliveryBoy.email }}</p>
+              } @else {
+                <p class="muted">Not assigned</p>
+              }
+
+              <!-- Reassign input -->
+              @if (so.status !== 'delivered' && so.status !== 'cancelled') {
+                <div class="reassign-row">
+                  <input
+                    class="reassign-input"
+                    placeholder="Paste rider ID to reassign"
+                    [formControl]="reassignInputs[so._id]"
+                  />
+                  <button mat-stroked-button (click)="reassignRider(so)">Reassign</button>
+                </div>
+              }
+            </div>
+
+            <!-- Status update -->
+            @if (so.status !== 'delivered' && so.status !== 'cancelled') {
+              <div class="status-update">
+                <mat-form-field appearance="outline" class="status-select">
+                  <mat-label>Update status</mat-label>
+                  <mat-select (selectionChange)="updateStatus(so, $event.value)">
+                    @for (s of statusOptions; track s) {
+                      <mat-option [value]="s">{{ s }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            }
+
+            @if (so.deliveredAt) {
+              <p class="delivered-at">
+                <mat-icon>check_circle</mat-icon>
+                Delivered {{ so.deliveredAt | date: 'dd MMM yyyy, hh:mm a' }}
+              </p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaArrowLeft, FaStore, FaUtensils } from "react-icons/fa";
+import { FaArrowLeft, FaStore, FaUtensils, FaBan } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router-dom";
 import itemAPI from "../../services/item"
@@ -34,15 +34,29 @@ const Shop = ({ shop }) => {
     }
   };
 
+  const isUnavailable = shopDetails?.shop?.status && !["active"].includes(shopDetails.shop.status);
+
   return (
     <div className="min-h-screen bg-gray-50">
-        <button 
-          className="absolute top-4 left-4 z-20 flex items-center cursor-pointer gap-2 bg-black/50 hover:bg-black/70 text-white px-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 backdrop-blur-sm border border-white/10" 
+        <button
+          className="absolute top-4 left-4 z-20 flex items-center cursor-pointer gap-2 bg-black/50 hover:bg-black/70 text-white px-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 backdrop-blur-sm border border-white/10"
           onClick={()=> navigate("/")}
         >
-            <FaArrowLeft className="transition-transform duration-200 group-hover:-translate-x-1" /> 
+            <FaArrowLeft className="transition-transform duration-200 group-hover:-translate-x-1" />
             <span className="font-medium">Back</span>
         </button>
+
+      {/* Shop unavailable banner */}
+      {isUnavailable && (
+        <div className="flex items-center gap-3 px-6 py-4 bg-red-50 border-b border-red-200">
+          <FaBan className="text-red-500 flex-shrink-0 text-lg" />
+          <div>
+            <p className="font-semibold text-red-700">This restaurant is currently unavailable</p>
+            <p className="text-sm text-red-500">You can browse the menu but ordering is disabled.</p>
+          </div>
+        </div>
+      )}
+
       {shopDetails && (
         <div className="relative w-full h-64 md:h-80 lg:h-96 overflow-hidden">
           <img 
@@ -71,9 +85,9 @@ const Shop = ({ shop }) => {
         </div>
 
         {shopDetails?.items.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-6 md:gap-8">
+            <div className={`flex flex-wrap justify-center gap-6 md:gap-8 ${isUnavailable ? "pointer-events-none opacity-60" : ""}`}>
                 {shopDetails?.items.map((item,index) =>(
-                    <div 
+                    <div
                       key={item._id || index}
                       className="opacity-0 transform translate-y-8 scale-95 animate-[fadeInUp_0.5s_ease-out_forwards]"
                       style={{ animationDelay: `${index * 100}ms` }}

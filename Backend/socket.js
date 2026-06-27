@@ -88,6 +88,12 @@ export const socketHandler = async (io) => {
             }
         });
 
+        // Admin panel joins this room to receive all rider location updates
+        socket.on("adminJoinTracking", () => {
+            socket.join("admin:tracking");
+            console.log(chalk.magenta(`🗺  Admin joined tracking room: ${socket.id}`));
+        });
+
         socket.on("joinOrderRoom", async ({orderId}) => {
             try {
                 if (!orderId) {
@@ -203,6 +209,14 @@ export const socketHandler = async (io) => {
                         //     }
                         // }
                         
+                        // Broadcast to admin tracking room regardless of order assignments
+                        io.to("admin:tracking").emit("riderLocationUpdate", {
+                            userId,
+                            latitude,
+                            longitude,
+                            timestamp: locationData.timestamp,
+                        });
+
                         console.log(chalk.blue(`🔍 Delivery boy ${userId} is assigned to orders:`, orderIds || 'none'));
                         
                         // Broadcast to each order room
@@ -292,6 +306,8 @@ export const socketHandler = async (io) => {
                             // Clean up mappings
                             await redis.del(`socket:user:${socket.id}`);
                             await redis.del(`user:socket:${userId}`);
+                            // ✅ Clean up location data
+                            await redis.del(`delivery:location:${userId}`);
                         }
                     } catch (redisErr) {
                         console.error('Redis cleanup error:', redisErr);
@@ -302,6 +318,10 @@ export const socketHandler = async (io) => {
                     socketId: null,
                     isOnline: false
                 });
+                
+                // ✅ CLEANUP: Remove all event listeners to prevent memory leaks
+                socket.removeAllListeners();
+                
                 console.log(chalk.red(`🔌 Client disconnected: ${socket.id}`));
             }catch(err){
                 console.error('Disconnect error:', err);

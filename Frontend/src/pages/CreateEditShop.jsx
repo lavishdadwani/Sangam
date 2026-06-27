@@ -39,8 +39,11 @@ const  handleSubmit = async (e) => {
     }
     const result = await ShopAPI.createEditShop(formData)
     if (result.ok) {
-      dispatch(setOwnerData(result.data.data));
-      dispatch(openSnackbar("Shop Created Successfully", "success"));
+      const shop = result.data.data;
+      dispatch(setOwnerData(shop));
+      const statusNote = shop.status && shop.status !== 'active'
+        ? ` Status: ${shop.status} — pending admin review.` : '';
+      dispatch(openSnackbar(`Shop saved successfully.${statusNote}`, "success"));
       navigate("/")
     } else {
       dispatch(openSnackbar(result.data?.message || "Error while creating Shop", "error"));

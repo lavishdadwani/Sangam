@@ -89,7 +89,7 @@ export const deleteItem = async (req, res) => {
       }
 
       const shop = await Shop.findOne({owner:req.userId})
-      console.log(shop.items)
+      // console.log(shop.items)
       shop.items = shop.items.filter( i => i.toString() !== item._id.toString())
       await shop.save()
       await shop.populate({

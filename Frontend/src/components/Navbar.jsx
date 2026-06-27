@@ -7,21 +7,39 @@ import { setSearchItems, setUserData } from "../redux/userSlice";
 import { clearOwnerData } from "../redux/ownerSlice";
 import userAPI from "../../services/user/user";
 import { openSnackbar } from "../redux/snackbarSlice";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaBell } from "react-icons/fa";
 import { TbReceipt2 } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
 import itemAPI from "../../services/item";
 import LocationSelector from "./LocationSelector";
 import ButtonSquare from "./ButtonSquare";
+import NotificationDrawer, { LS_KEY } from "./NotificationDrawer";
+import notificationAPI from "../../services/notification";
 
 const Nav = ({ userData, currentCity,shopData, cartItems = [], myOrders = [] }) => {
   const navigate = useNavigate()
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [query, setQuery] = useState('');
   const infoRef = useRef(null);
   const dispatch = useDispatch();
   if (!userData) return null;
+
+  // Check for unread notifications (users only)
+  useEffect(() => {
+    if (userData.role !== "user") return;
+    const lastSeen = localStorage.getItem(LS_KEY) ?? "0";
+    notificationAPI.getNotifications().then((r) => {
+      if (r.ok) {
+        const count = (r.data.data ?? []).filter(
+          (n) => new Date(n.createdAt).toISOString() > lastSeen
+        ).length;
+        setUnreadCount(count);
+      }
+    });
+  }, [userData.role]);
 
   useEffect(() => {
     setShowInfo(false);
@@ -74,6 +92,7 @@ const Nav = ({ userData, currentCity,shopData, cartItems = [], myOrders = [] }) 
   }
 
   return (
+    <>
     <nav className="w-full h-20 flex items-center justify-between gap-6 px-6 fixed top-0 z-[999] bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200/60 transition-all duration-300">
       {showSearch && userData.role == "user" && (
         <div className="w-[calc(100%-2rem)] max-w-md h-16 bg-white shadow-lg rounded-lg items-center gap-3 flex fixed top-20 left-4 right-4 md:hidden border border-gray-200/80 animate-in fade-in slide-in-from-top-2 duration-200 z-[998]">
@@ -180,8 +199,22 @@ const Nav = ({ userData, currentCity,shopData, cartItems = [], myOrders = [] }) 
         ) : (
           <>
             {userData.role == "user" && (
-              <button 
-                className="relative p-2 text-[#ff4d2d] hover:bg-gray-100 rounded-lg transition-colors duration-200" 
+              <button
+                className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                onClick={() => { setShowNotifications(true); setUnreadCount(0); }}
+                aria-label="Notifications"
+              >
+                <FaBell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 text-[10px] font-semibold text-white bg-[#ff4d2d] rounded-full w-5 h-5 flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+            {userData.role == "user" && (
+              <button
+                className="relative p-2 text-[#ff4d2d] hover:bg-gray-100 rounded-lg transition-colors duration-200"
                 onClick={() => navigate("/cart")}
                 aria-label="Shopping cart"
               >
@@ -216,14 +249,25 @@ const Nav = ({ userData, currentCity,shopData, cartItems = [], myOrders = [] }) 
                 {userData?.fullName || "User"}
               </div>
               {userData.role == "user" && (
-                <button 
-                  className="md:hidden text-left text-sm text-gray-700 hover:bg-gray-50 px-3 py-2 rounded transition-colors duration-150" 
+                <button
+                  className="md:hidden text-left text-sm text-gray-700 hover:bg-gray-50 px-3 py-2 rounded transition-colors duration-150"
                   onClick={() => {
                     navigate("my-orders");
                     setShowInfo(false);
                   }}
                 >
                   My Orders
+                </button>
+              )}
+              {userData.role == "user" && (
+                <button
+                  className="text-left text-sm text-gray-700 hover:bg-gray-50 px-3 py-2 rounded transition-colors duration-150"
+                  onClick={() => {
+                    navigate("/my-complaints");
+                    setShowInfo(false);
+                  }}
+                >
+                  My Complaints
                 </button>
               )}
               <button
@@ -240,6 +284,10 @@ const Nav = ({ userData, currentCity,shopData, cartItems = [], myOrders = [] }) 
         </div>
       </div>
     </nav>
+    {showNotifications && (
+      <NotificationDrawer onClose={() => setShowNotifications(false)} />
+    )}
+    </>
   );
 };
 

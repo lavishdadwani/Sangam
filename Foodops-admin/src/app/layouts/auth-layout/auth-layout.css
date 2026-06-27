@@ -1,0 +1,11 @@
+.auth-layout-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, #eef2ff 0%, #f8fbff 100%);
+}
+
+.auth-frame {
+  width: min(520px, 100%);
+}

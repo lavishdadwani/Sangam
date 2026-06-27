@@ -1,0 +1,156 @@
+<div class="fleet-page">
+  <div class="page-header">
+    <div>
+      <h1>Fleet Monitoring</h1>
+      <p>Real-time overview of all delivery partners.</p>
+    </div>
+    <button mat-stroked-button (click)="load()">
+      <mat-icon>refresh</mat-icon> Refresh
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+  @if (!isLoading() && stats()) {
+
+    <!-- Stat cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#e0e7ff;color:#4f46e5">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div>
+          <p class="stat-label">Total Riders</p>
+          <p class="stat-value">{{ stats()!.riders.total }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#059669">
+          <mat-icon>sensors</mat-icon>
+        </div>
+        <div>
+          <p class="stat-label">Online Now</p>
+          <p class="stat-value">{{ stats()!.riders.online }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fef9c3;color:#ca8a04">
+          <mat-icon>delivery_dining</mat-icon>
+        </div>
+        <div>
+          <p class="stat-label">Busy (On Delivery)</p>
+          <p class="stat-value">{{ stats()!.riders.busy }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5;color:#059669">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div>
+          <p class="stat-label">Available</p>
+          <p class="stat-value">{{ stats()!.riders.available }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f3f4f6;color:#6b7280">
+          <mat-icon>wifi_off</mat-icon>
+        </div>
+        <div>
+          <p class="stat-label">Offline</p>
+          <p class="stat-value">{{ stats()!.riders.offline }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fce7f3;color:#be185d">
+          <mat-icon>timer</mat-icon>
+        </div>
+        <div>
+          <p class="stat-label">Avg Delivery Time</p>
+          <p class="stat-value">{{ formatMinutes(stats()!.deliveries.avgMinutes) }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe;color:#1d4ed8">
+          <mat-icon>today</mat-icon>
+        </div>
+        <div>
+          <p class="stat-label">Deliveries Today</p>
+          <p class="stat-value">{{ stats()!.deliveries.today }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="card chart-card">
+        <h3>Rider Status Breakdown</h3>
+        <div class="chart-wrap">
+          <canvas #ridersChart></canvas>
+        </div>
+      </div>
+
+      <div class="card chart-card wide">
+        <h3>Top 5 Riders by Deliveries</h3>
+        @if (stats()!.topRiders.length === 0) {
+          <p class="muted">No completed deliveries yet.</p>
+        } @else {
+          <div class="chart-wrap">
+            <canvas #topRidersChart></canvas>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Top riders table -->
+    @if (stats()!.topRiders.length > 0) {
+      <div class="card">
+        <h3>Top Rider Performance</h3>
+        <table class="perf-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Rider</th>
+              <th>Status</th>
+              <th>Deliveries</th>
+              <th>Total Order Value</th>
+              <th>Avg per Delivery</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rider of stats()!.topRiders; track rider._id; let i = $index) {
+              <tr>
+                <td class="rank">{{ i + 1 }}</td>
+                <td>
+                  <div class="rider-cell">
+                    <span class="rider-name">{{ rider.fullName }}</span>
+                    <span class="rider-email">{{ rider.email }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="online-dot" [class.is-online]="rider.isOnline"></span>
+                  {{ rider.isOnline ? 'Online' : 'Offline' }}
+                </td>
+                <td><strong>{{ rider.deliveryCount }}</strong></td>
+                <td>₹{{ rider.totalValue | number }}</td>
+                <td>₹{{ (rider.totalValue / rider.deliveryCount) | number: '1.0-0' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  }
+</div>

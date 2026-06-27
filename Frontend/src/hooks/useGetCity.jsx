@@ -17,14 +17,27 @@ function useGetCity() {
       return
     }
 
+    let isMounted = true;
+    const controller = new AbortController();
+
     navigator.geolocation.getCurrentPosition( 
       async (position) => {
         try {
           const latitude = position.coords.latitude
           const longitude = position.coords.longitude
+          
+          // ✅ Only dispatch if component is still mounted
+          if (!isMounted) return;
+          
           dispatch(setLocation({ lat: latitude, lng: longitude }))
           
-          const result = await getCityName(latitude, longitude)
+          const result = await getCityName(latitude, longitude, {
+            signal: controller.signal,
+          });
+          
+          // ✅ Check if still mounted before updating state
+          if (!isMounted) return;
+          
           if (result && result.results && result.results.length > 0) {
             const cityName = result.results[0].city
             const stateName = result.results[0].state
@@ -42,7 +55,9 @@ function useGetCity() {
             console.error("Invalid geolocation response:", result)
           }
         } catch (error) {
-          console.error("Error getting city name:", error)
+          if (error.name !== "AbortError") {
+            console.error("Error getting city name:", error)
+          }
         }
       },
       (error) => {
@@ -68,7 +83,13 @@ function useGetCity() {
         timeout: 10000,
         maximumAge: 0
       }
-    )
+    );
+
+    // ✅ CLEANUP: Mark as unmounted and abort pending requests
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [userData, currentCity, dispatch])
 }
 

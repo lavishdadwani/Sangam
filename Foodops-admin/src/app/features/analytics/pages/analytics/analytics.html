@@ -1,0 +1,126 @@
+<div class="analytics-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1>Analytics</h1>
+      <p>Platform performance over the selected period.</p>
+    </div>
+    <div class="header-controls">
+      <mat-button-toggle-group [(ngModel)]="days" (change)="onDaysChange()">
+        @for (d of dayOptions; track d) {
+          <mat-button-toggle [value]="d">{{ d }}d</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+      <button mat-stroked-button (click)="exportRevenue()" [disabled]="!data()">
+        <mat-icon>download</mat-icon> Export CSV
+      </button>
+    </div>
+  </div>
+
+  @if (error()) { <div class="error-banner">{{ error() }}</div> }
+
+  @if (isLoading()) {
+    <div class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+  @if (!isLoading() && data()) {
+
+    <!-- Summary cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <mat-icon style="color:#6366f1">currency_rupee</mat-icon>
+        <div>
+          <p class="card-label">Total Revenue</p>
+          <p class="card-value">₹{{ totalRevenue() | number }}</p>
+        </div>
+      </div>
+      <div class="summary-card">
+        <mat-icon style="color:#f59e0b">receipt_long</mat-icon>
+        <div>
+          <p class="card-label">Total Orders</p>
+          <p class="card-value">{{ totalOrders() | number }}</p>
+        </div>
+      </div>
+      <div class="summary-card">
+        <mat-icon style="color:#22c55e">person_add</mat-icon>
+        <div>
+          <p class="card-label">New Customers</p>
+          <p class="card-value">{{ totalNewCustomers() | number }}</p>
+        </div>
+      </div>
+      <div class="summary-card">
+        <mat-icon style="color:#ec4899">schedule</mat-icon>
+        <div>
+          <p class="card-label">Peak Hour</p>
+          <p class="card-value">{{ peakHour() }}:00</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue + Orders charts -->
+    <div class="charts-row-2">
+      <div class="card">
+        <h3>Revenue (₹)</h3>
+        <div class="chart-wrap"><canvas #revenueChart></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Orders</h3>
+        <div class="chart-wrap"><canvas #ordersChart></canvas></div>
+      </div>
+    </div>
+
+    <!-- Customer growth + Peak hours -->
+    <div class="charts-row-2">
+      <div class="card">
+        <h3>New Customer Registrations</h3>
+        <div class="chart-wrap"><canvas #growthChart></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Peak Hours (Orders by Hour)</h3>
+        <div class="chart-wrap"><canvas #peakChart></canvas></div>
+      </div>
+    </div>
+
+    <!-- Payment breakdown + Top restaurants -->
+    <div class="charts-row-asymmetric">
+
+      <div class="card">
+        <h3>Payment Methods</h3>
+        <div class="chart-wrap-sm"><canvas #paymentChart></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>Top Restaurants by Revenue</h3>
+        @if (data()!.topRestaurants.length === 0) {
+          <p class="muted">No data for this period.</p>
+        } @else {
+          <table class="perf-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Restaurant</th>
+                <th>City</th>
+                <th>Orders</th>
+                <th>Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of data()!.topRestaurants; track r._id; let i = $index) {
+                <tr>
+                  <td class="rank">{{ i + 1 }}</td>
+                  <td><strong>{{ r.name }}</strong></td>
+                  <td>{{ r.city }}</td>
+                  <td>{{ r.orders }}</td>
+                  <td>₹{{ r.revenue | number }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+    </div>
+  }
+
+</div>

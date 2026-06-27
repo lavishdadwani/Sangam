@@ -15,6 +15,7 @@ import OrderApi from "../../services/order"
 import { openSnackbar } from "../redux/snackbarSlice";
 import { addMyOrder, setCurrentCity, setCurrentState } from "../redux/userSlice";
 import { saveLocationToStorage, forceSyncLocationToDB } from "../../services/locationService";
+import useGetPlatformSettings from "../hooks/useGetPlatformSettings";
 const CheckOut = () => {
     const {location, address} = useSelector(state => state.map)
     const {cartItems,totalAmount, userData, currentCity, currentState} = useSelector(state => state.user)
@@ -23,9 +24,11 @@ const CheckOut = () => {
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
     const dispatch = useDispatch()
+    const { settings, getDeliveryFee } = useGetPlatformSettings()
 
-    const deliveryFee = totalAmount > 500 ? 0 : 40
-    const AmountWithDeliveryFee = totalAmount + deliveryFee
+    const deliveryFee = getDeliveryFee(totalAmount)
+    const gstAmount = Math.round((totalAmount * settings.tax.gst) / 100)
+    const AmountWithDeliveryFee = totalAmount + deliveryFee + gstAmount
     // const map = useMap()
     // useEffect(() => {
     //     setSearchLocation(address)
@@ -262,13 +265,22 @@ const CheckOut = () => {
                 <span>Subtotal</span>
                 <span>₹{totalAmount}</span>
             </div>
-            <div className="flex justify-between text-gray-700"> 
+            <div className="flex justify-between text-gray-700">
                 <span>Delivery Fee</span>
-                <span>{deliveryFee === 0 ? "Free" : deliveryFee}</span>
+                <span>{deliveryFee === 0 ? <span className="text-green-600 font-medium">Free</span> : `₹${deliveryFee}`}</span>
             </div>
+            <div className="flex justify-between text-gray-500 text-sm">
+                <span>GST ({settings.tax.gst}%)</span>
+                <span>₹{gstAmount}</span>
+            </div>
+            {totalAmount < settings.order.minOrderAmount && (
+                <p className="text-xs text-red-500 mt-1">
+                  Minimum order amount is ₹{settings.order.minOrderAmount}
+                </p>
+            )}
             <div className="flex justify-between text-lg font-bold text-[#ff4d2d] pt-2">
                 <span>Total</span>
-                <span>{AmountWithDeliveryFee}</span>
+                <span>₹{AmountWithDeliveryFee}</span>
             </div>
         </div>
         </section>

@@ -18,6 +18,7 @@ import CartPage from './pages/CartPage'
 import CheckOut from './pages/CheckOut'
 import OrderPlaced from './pages/OrderPlaced'
 import MyOrders from './pages/MyOrders'
+import MyComplaints from './pages/MyComplaints'
 import useGetMyOrders from './hooks/useGetMyOrders'
 import useUpdateLocation from './hooks/useUpdateLocation'
 import TrackOrderPage from './pages/TrackOrderPage'
@@ -40,7 +41,11 @@ function App() {
 
   useEffect(() => {
     const socketInstance = io(import.meta.env.VITE_SERVER_URL, {
-      withCredentials: true
+      withCredentials: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
     })
     
     dispatch(setSocket(socketInstance))
@@ -55,16 +60,24 @@ function App() {
       console.error("Socket connection error:", error)
     }
 
+    const handleDisconnect = (reason) => {
+      console.log("Socket disconnected:", reason)
+    }
+
     socketInstance.on("connect", handleConnect)
     socketInstance.on("error", handleError)
+    socketInstance.on("disconnect", handleDisconnect)
 
     if (socketInstance.connected && userData?._id) {
       socketInstance.emit("identity", { userId: userData._id })
     }
 
     return () => {
+      // ✅ CLEANUP: Remove all listeners to prevent memory leaks
       socketInstance.off("connect", handleConnect)
       socketInstance.off("error", handleError)
+      socketInstance.off("disconnect", handleDisconnect)
+      socketInstance.removeAllListeners()
       socketInstance.disconnect()
     }
   }, [userData?._id, dispatch])
@@ -107,6 +120,10 @@ function App() {
         <Route
           path="/my-orders"
           element={userData ? <MyOrders /> : <Navigate to="/signIn" />}
+        />
+        <Route
+          path="/my-complaints"
+          element={userData ? <MyComplaints /> : <Navigate to="/signIn" />}
         />
         <Route
           path="/track-order/:orderId"

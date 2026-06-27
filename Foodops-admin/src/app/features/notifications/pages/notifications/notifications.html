@@ -1,0 +1,256 @@
+<div class="notifications-page">
+  <div class="page-header">
+    <h1>Notifications</h1>
+    <p>Send platform notifications and manage templates.</p>
+  </div>
+
+  <mat-tab-group animationDuration="200ms">
+
+    <!-- ── Tab 1: Send ── -->
+    <mat-tab label="Send Notification">
+      <div class="tab-content">
+        <div class="send-grid">
+
+          <div class="card">
+            <h3>Compose Notification</h3>
+            <form [formGroup]="sendForm" (ngSubmit)="send()">
+
+              <div class="fields-row">
+                <mat-form-field appearance="outline" class="grow">
+                  <mat-label>Title</mat-label>
+                  <input matInput formControlName="title" />
+                  @if (sendForm.get('title')?.invalid && sendForm.get('title')?.touched) {
+                    <mat-error>At least 3 characters</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" style="flex:0 1 160px">
+                  <mat-label>Type</mat-label>
+                  <mat-select formControlName="type">
+                    @for (t of typeOptions; track t.value) {
+                      <mat-option [value]="t.value">{{ t.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-field">
+                <mat-label>Message</mat-label>
+                <textarea matInput formControlName="message" rows="4" placeholder="Write your notification message…"></textarea>
+                @if (sendForm.get('message')?.invalid && sendForm.get('message')?.touched) {
+                  <mat-error>At least 5 characters</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-field">
+                <mat-label>Send To</mat-label>
+                <mat-select formControlName="targetRole">
+                  @for (t of targetOptions; track t.value) {
+                    <mat-option [value]="t.value">{{ t.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              @if (targetRole === 'specific') {
+                <mat-form-field appearance="outline" class="full-field">
+                  <mat-label>User ID</mat-label>
+                  <input matInput formControlName="targetUserId" placeholder="Paste user's MongoDB ID" />
+                  <mat-icon matPrefix style="color:#9ca3af">person</mat-icon>
+                </mat-form-field>
+              }
+
+              <div class="toggles-row">
+                <mat-slide-toggle formControlName="sendEmailFlag" color="primary">
+                  Also send email
+                </mat-slide-toggle>
+                <mat-slide-toggle formControlName="scheduleEnabled" color="primary">
+                  Schedule for later
+                </mat-slide-toggle>
+              </div>
+
+              @if (scheduleEnabled) {
+                <mat-form-field appearance="outline" class="full-field">
+                  <mat-label>Schedule Date & Time</mat-label>
+                  <input matInput type="datetime-local" formControlName="scheduledAt" />
+                </mat-form-field>
+              }
+
+              <button mat-flat-button color="primary" type="submit"
+                [disabled]="sendForm.invalid || sending()">
+                <mat-icon>{{ scheduleEnabled ? 'schedule_send' : 'send' }}</mat-icon>
+                {{ sending() ? 'Sending…' : (scheduleEnabled ? 'Schedule' : 'Send Now') }}
+              </button>
+            </form>
+          </div>
+
+          <!-- Quick target info -->
+          <div class="target-info">
+            <div class="card info-card">
+              <h3><mat-icon>info</mat-icon> Targeting</h3>
+              <ul>
+                <li><strong>All Users</strong> — every active platform user</li>
+                <li><strong>Customers Only</strong> — users with role "user"</li>
+                <li><strong>Restaurant Owners</strong> — users with role "owner"</li>
+                <li><strong>Delivery Boys</strong> — users with role "deliveryBoy"</li>
+                <li><strong>Specific User</strong> — paste a user's MongoDB ID</li>
+              </ul>
+            </div>
+            <div class="card info-card email-info">
+              <h3><mat-icon>email</mat-icon> Email</h3>
+              <p>Enabling "Also send email" will dispatch an email to each recipient using the platform's Gmail account. Emails are sent in the background and do not delay the response.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ── Tab 2: Templates ── -->
+    <mat-tab label="Templates">
+      <div class="tab-content">
+
+        <!-- Create template form -->
+        <div class="card">
+          <h3>New Template</h3>
+          <form [formGroup]="templateForm" (ngSubmit)="saveTemplate()">
+            <div class="fields-row">
+              <mat-form-field appearance="outline" class="grow">
+                <mat-label>Template Name</mat-label>
+                <input matInput formControlName="name" placeholder="e.g. Weekend Offer" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" style="flex:0 1 160px">
+                <mat-label>Type</mat-label>
+                <mat-select formControlName="type">
+                  @for (t of typeOptions; track t.value) {
+                    <mat-option [value]="t.value">{{ t.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-field">
+              <mat-label>Title</mat-label>
+              <input matInput formControlName="title" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-field">
+              <mat-label>Message</mat-label>
+              <textarea matInput formControlName="message" rows="3"></textarea>
+            </mat-form-field>
+
+            <button mat-flat-button color="primary" type="submit"
+              [disabled]="templateForm.invalid || savingTemplate()">
+              {{ savingTemplate() ? 'Saving…' : 'Save Template' }}
+            </button>
+          </form>
+        </div>
+
+        <!-- Template grid -->
+        @if (templatesLoading()) {
+          <div class="spinner-wrap"><mat-spinner diameter="36"></mat-spinner></div>
+        } @else if (templates().length === 0) {
+          <div class="empty-state"><mat-icon>description</mat-icon><p>No templates yet.</p></div>
+        } @else {
+          <div class="template-grid">
+            @for (t of templates(); track t._id) {
+              <div class="card template-card">
+                <div class="template-header">
+                  <span class="badge type-{{ t.type }}">{{ t.type }}</span>
+                  <button mat-icon-button (click)="deleteTemplate(t._id)" class="delete-btn">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+                <p class="template-name">{{ t.name }}</p>
+                <p class="template-title">{{ t.title }}</p>
+                <p class="template-msg">{{ t.message }}</p>
+                <button mat-stroked-button (click)="useTemplate(t)" class="use-btn">
+                  <mat-icon>arrow_forward</mat-icon> Use Template
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+    </mat-tab>
+
+    <!-- ── Tab 3: History ── -->
+    <mat-tab label="History">
+      <div class="tab-content">
+        <div class="table-card">
+          @if (historyLoading()) {
+            <div class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div>
+          } @else if (history().length === 0) {
+            <div class="empty-state"><mat-icon>inbox</mat-icon><p>No notifications sent yet.</p></div>
+          } @else {
+            <table mat-table [dataSource]="history()">
+
+              <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef>Notification</th>
+                <td mat-cell *matCellDef="let n">
+                  <div class="notif-cell">
+                    <span class="notif-title">{{ n.title }}</span>
+                    <span class="notif-msg">{{ n.message | slice:0:60 }}…</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="target">
+                <th mat-header-cell *matHeaderCellDef>Target</th>
+                <td mat-cell *matCellDef="let n">
+                  <span class="badge target-badge">{{ n.targetRole }}</span>
+                  @if (n.sendEmail) {
+                    <mat-icon class="email-icon" title="Email sent">email</mat-icon>
+                  }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>Type</th>
+                <td mat-cell *matCellDef="let n">
+                  <span class="badge type-{{ n.type }}">{{ n.type }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let n">
+                  <span class="badge status-{{ n.status }}">{{ n.status }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="recipients">
+                <th mat-header-cell *matHeaderCellDef>Recipients</th>
+                <td mat-cell *matCellDef="let n">{{ n.recipientCount | number }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="sentAt">
+                <th mat-header-cell *matHeaderCellDef>Sent / Scheduled</th>
+                <td mat-cell *matCellDef="let n">
+                  {{ (n.sentAt ?? n.scheduledAt) | date:'dd MMM, hh:mm a' }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="sentBy">
+                <th mat-header-cell *matHeaderCellDef>Sent By</th>
+                <td mat-cell *matCellDef="let n">{{ n.sentBy?.fullName ?? '—' }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: historyColumns;"></tr>
+            </table>
+
+            <mat-paginator
+              [length]="pagination().total"
+              [pageSize]="pagination().limit"
+              [pageIndex]="pagination().page - 1"
+              [pageSizeOptions]="[10, 25, 50]"
+              (page)="onPageChange($event)"
+            ></mat-paginator>
+          }
+        </div>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>

@@ -9,22 +9,33 @@ function useGetShopByCity() {
   
   useEffect(() => {
     // Only fetch shops when city is available
-    if (!currentCity) return
+    if (!currentCity) return;
 
-  const fetchShops = async () => {
-    try {
-        const result = await shopAPI.getShopByCity(currentCity)
+    const controller = new AbortController();
+
+    const fetchShops = async () => {
+      try {
+        const result = await shopAPI.getShopByCity(currentCity, {
+          signal: controller.signal,
+        });
         if (result.ok) {
-            dispatch(setShopsInMyCity(result.data.data))
+          dispatch(setShopsInMyCity(result.data.data));
         } else {
-          console.error(result.data?.message)
-          }
-    } catch (err) {
-        console.error("Error fetching shops:", err)
+          console.error(result.data?.message);
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Error fetching shops:", err);
+        }
       }
-    }
+    };
 
-    fetchShops()
+    fetchShops();
+
+    // ✅ CLEANUP: Abort the request if component unmounts or city changes
+    return () => {
+      controller.abort();
+    };
   }, [currentCity, dispatch])
 }
 

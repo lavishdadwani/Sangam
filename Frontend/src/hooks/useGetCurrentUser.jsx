@@ -5,22 +5,34 @@ import { setUserData } from "../redux/userSlice";
 
 function useGetCurrentUser() {
     const dispatch = useDispatch()
+  
   useEffect(() => {
-    fetchUser()
-  },[]);
+    const controller = new AbortController();
 
-  const fetchUser = async () => {
-    try {
-        const result = await userAPI.getCurrentUser()
-        console.log(result.data)
-        if(result.ok){
-            dispatch(setUserData(result.data.data))
-          }else{
-          }
-    } catch (err) {
-        console.log(err)
-    }
-  };
+    const fetchUser = async () => {
+      try {
+        const result = await userAPI.getCurrentUser({
+          signal: controller.signal,
+        });
+        console.log(result.data);
+        if (result.ok) {
+          dispatch(setUserData(result.data.data));
+        }
+      } catch (err) {
+        // Ignore abort errors (cleanup)
+        if (err.name !== "AbortError") {
+          console.log(err);
+        }
+      }
+    };
+
+    fetchUser();
+
+    // ✅ CLEANUP: Abort the request if component unmounts
+    return () => {
+      controller.abort();
+    };
+  }, [dispatch]);
 }
 
 export default useGetCurrentUser;
