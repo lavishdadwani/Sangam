@@ -1,0 +1,139 @@
+<div class="detail-page">
+  <div class="back-row">
+    <a routerLink="/restaurants" mat-button>
+      <mat-icon>arrow_back</mat-icon> Back to Restaurants
+    </a>
+  </div>
+
+  @if (isLoading()) {
+    <div class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+  @if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  }
+
+  @if (!isLoading() && shop()) {
+    <!-- Hero -->
+    <div class="hero-card">
+      <img class="hero-img" [src]="shop()!.image" [alt]="shop()!.name" />
+      <div class="hero-body">
+        <div class="hero-top">
+          <div>
+            <h1>{{ shop()!.name }}</h1>
+            <p class="hero-address">
+              <mat-icon>location_on</mat-icon>
+              {{ shop()!.address }}, {{ shop()!.city }}, {{ shop()!.state }}
+            </p>
+          </div>
+          <div class="hero-actions">
+            <span class="badge status-{{ shop()!.status }}">{{ shop()!.status }}</span>
+            <button mat-icon-button [matMenuTriggerFor]="actionMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #actionMenu="matMenu">
+              @if (shop()!.status !== 'active') {
+                <button mat-menu-item (click)="setStatus('active')">
+                  <mat-icon>check_circle</mat-icon> Approve
+                </button>
+              }
+              @if (shop()!.status !== 'pending') {
+                <button mat-menu-item (click)="setStatus('pending')">
+                  <mat-icon>hourglass_empty</mat-icon> Set Pending
+                </button>
+              }
+              @if (shop()!.status !== 'suspended') {
+                <button mat-menu-item (click)="setStatus('suspended')">
+                  <mat-icon>pause_circle</mat-icon> Suspend
+                </button>
+              }
+              @if (shop()!.status !== 'rejected') {
+                <button mat-menu-item (click)="setStatus('rejected')">
+                  <mat-icon>cancel</mat-icon> Reject
+                </button>
+              }
+            </mat-menu>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+
+      <!-- Left column -->
+      <div class="left-col">
+
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <mat-icon style="color:#4f46e5">receipt_long</mat-icon>
+            <div>
+              <p class="stat-label">Total Orders</p>
+              <p class="stat-value">{{ stats()?.totalOrders ?? 0 | number }}</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <mat-icon style="color:#16a34a">currency_rupee</mat-icon>
+            <div>
+              <p class="stat-label">Revenue</p>
+              <p class="stat-value">₹{{ stats()?.totalRevenue ?? 0 | number }}</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <mat-icon style="color:#d97706">restaurant_menu</mat-icon>
+            <div>
+              <p class="stat-label">Menu Items</p>
+              <p class="stat-value">{{ stats()?.itemCount ?? 0 }}</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <mat-icon style="color:#f59e0b">star</mat-icon>
+            <div>
+              <p class="stat-label">Avg Rating</p>
+              <p class="stat-value">{{ stats()?.avgRating ?? 0 }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Owner info -->
+        <div class="card owner-card">
+          <h3><mat-icon>person</mat-icon> Owner</h3>
+          <div class="info-row"><mat-icon>badge</mat-icon><span>{{ shop()!.owner.fullName }}</span></div>
+          <div class="info-row"><mat-icon>email</mat-icon><span>{{ shop()!.owner.email }}</span></div>
+          <div class="info-row"><mat-icon>phone</mat-icon><span>{{ shop()!.owner.mobile }}</span></div>
+        </div>
+      </div>
+
+      <!-- Right column: Menu -->
+      <div class="card menu-card">
+        <h3><mat-icon>restaurant_menu</mat-icon> Menu ({{ items().length }} items)</h3>
+        @if (items().length === 0) {
+          <p class="muted">No menu items yet.</p>
+        } @else {
+          <div class="menu-list">
+            @for (item of items(); track item._id) {
+              <div class="menu-item">
+                <img class="menu-thumb" [src]="item.image" [alt]="item.name" />
+                <div class="menu-info">
+                  <span class="menu-name">{{ item.name }}</span>
+                  <span class="menu-cat">{{ item.category }}</span>
+                </div>
+                <div class="menu-right">
+                  <span class="menu-price">₹{{ item.price }}</span>
+                  @if (item.rating.count > 0) {
+                    <span class="menu-rating">
+                      <mat-icon>star</mat-icon>{{ item.rating.average | number: '1.1-1' }}
+                    </span>
+                  }
+                  <span class="badge" [class.veg]="item.foodType === 'veg'" [class.nonveg]="item.foodType !== 'veg'">
+                    {{ item.foodType }}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+</div>

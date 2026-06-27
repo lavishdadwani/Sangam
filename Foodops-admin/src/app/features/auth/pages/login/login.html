@@ -3,19 +3,35 @@
     <h1>FoodOps Admin</h1>
     <p>Sign in to manage riders, restaurants, orders, and analytics.</p>
 
-    <form (submit)="onLogin(email, password); $event.preventDefault()">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <mat-form-field appearance="fill" class="field">
         <mat-label>Email</mat-label>
-        <input matInput #email type="email" required placeholder="admin@example.com" />
+        <input matInput formControlName="email" type="email" placeholder="admin@example.com" />
+        @if (email.invalid && email.touched) {
+          <mat-error>Enter a valid email address</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="field">
         <mat-label>Password</mat-label>
-        <input matInput #password type="password" required placeholder="Password" />
+        <input matInput formControlName="password" type="password" placeholder="Password" />
+        @if (password.invalid && password.touched) {
+          <mat-error>Password must be at least 6 characters</mat-error>
+        }
       </mat-form-field>
 
-      <button type="submit" mat-flat-button color="primary" class="login-button">
-        Sign in
+      @if (errorMessage) {
+        <p class="error-message">{{ errorMessage }}</p>
+      }
+
+      <button
+        type="submit"
+        mat-flat-button
+        color="primary"
+        class="login-button"
+        [disabled]="isLoading || loginForm.invalid"
+      >
+        {{ isLoading ? 'Signing in...' : 'Sign in' }}
       </button>
     </form>
   </div>

@@ -1,0 +1,210 @@
+<div class="settings-page">
+  <div class="page-header">
+    <h1>Settings</h1>
+    <p>Manage your profile and platform configuration.</p>
+  </div>
+
+  <mat-tab-group animationDuration="200ms">
+
+    <!-- ── Tab 1: My Profile ── -->
+    <mat-tab label="My Profile">
+      <div class="tab-content">
+
+        @if (profile()) {
+          <!-- Profile card -->
+          <div class="card profile-card">
+            <div class="avatar-row">
+              <div class="avatar">{{ profile()!.fullName[0].toUpperCase() }}</div>
+              <div>
+                <h2>{{ profile()!.fullName }}</h2>
+                <p class="email">{{ profile()!.email }}</p>
+                <span class="badge role-badge">{{ profile()!.role }}</span>
+              </div>
+            </div>
+
+            <div class="info-grid">
+              <div class="info-item">
+                <mat-icon>schedule</mat-icon>
+                <div>
+                  <p class="info-label">Last Login</p>
+                  <p class="info-value">
+                    {{ profile()!.lastLoginAt ? (profile()!.lastLoginAt | date:'dd MMM yyyy, hh:mm a') : 'Never' }}
+                  </p>
+                </div>
+              </div>
+              <div class="info-item">
+                <mat-icon>router</mat-icon>
+                <div>
+                  <p class="info-label">Last Login IP</p>
+                  <p class="info-value">{{ profile()!.lastLoginIp ?? '—' }}</p>
+                </div>
+              </div>
+              <div class="info-item">
+                <mat-icon>calendar_today</mat-icon>
+                <div>
+                  <p class="info-label">Account Created</p>
+                  <p class="info-value">{{ profile()!.createdAt | date:'dd MMM yyyy' }}</p>
+                </div>
+              </div>
+              <div class="info-item">
+                <mat-icon>verified_user</mat-icon>
+                <div>
+                  <p class="info-label">Status</p>
+                  <p class="info-value">
+                    <span class="badge" [class.active]="profile()!.isActive" [class.inactive]="!profile()!.isActive">
+                      {{ profile()!.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit name -->
+          <div class="card form-card">
+            <h3>Edit Name</h3>
+            <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+              <mat-form-field appearance="outline" class="full-field">
+                <mat-label>Full Name</mat-label>
+                <input matInput formControlName="fullName" />
+                @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
+                  <mat-error>At least 2 characters required</mat-error>
+                }
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit" [disabled]="profileForm.invalid || profileSaving()">
+                {{ profileSaving() ? 'Saving…' : 'Save Name' }}
+              </button>
+            </form>
+          </div>
+
+          <!-- Change password -->
+          <div class="card form-card">
+            <h3>Change Password</h3>
+            <form [formGroup]="passwordForm" (ngSubmit)="savePassword()">
+              <mat-form-field appearance="outline" class="full-field">
+                <mat-label>Current Password</mat-label>
+                <input matInput formControlName="currentPassword" [type]="hideCurrentPw ? 'password' : 'text'" />
+                <button type="button" mat-icon-button matSuffix (click)="hideCurrentPw = !hideCurrentPw">
+                  <mat-icon>{{ hideCurrentPw ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-field">
+                <mat-label>New Password</mat-label>
+                <input matInput formControlName="newPassword" [type]="hideNewPw ? 'password' : 'text'" />
+                <button type="button" mat-icon-button matSuffix (click)="hideNewPw = !hideNewPw">
+                  <mat-icon>{{ hideNewPw ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                @if (passwordForm.get('newPassword')?.errors?.['minlength'] && passwordForm.get('newPassword')?.touched) {
+                  <mat-error>Minimum 6 characters</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-field">
+                <mat-label>Confirm New Password</mat-label>
+                <input matInput formControlName="confirmPassword" [type]="hideConfirmPw ? 'password' : 'text'" />
+                <button type="button" mat-icon-button matSuffix (click)="hideConfirmPw = !hideConfirmPw">
+                  <mat-icon>{{ hideConfirmPw ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                @if (passwordForm.errors?.['mismatch'] && passwordForm.get('confirmPassword')?.touched) {
+                  <mat-error>Passwords do not match</mat-error>
+                }
+              </mat-form-field>
+
+              <button mat-flat-button color="primary" type="submit"
+                [disabled]="passwordForm.invalid || passwordSaving()">
+                {{ passwordSaving() ? 'Changing…' : 'Change Password' }}
+              </button>
+            </form>
+          </div>
+        }
+
+      </div>
+    </mat-tab>
+
+    <!-- ── Tab 2: Platform Settings ── -->
+    <mat-tab [label]="isSuperAdmin() ? 'Platform Settings' : 'Platform Settings (read-only)'">
+      <div class="tab-content">
+
+        @if (platformLoading()) {
+          <div class="spinner-wrap"><mat-spinner diameter="36"></mat-spinner></div>
+        } @else {
+          <form [formGroup]="platformForm" (ngSubmit)="savePlatformSettings()">
+
+            <!-- Delivery charges -->
+            <div class="card settings-section">
+              <h3><mat-icon>local_shipping</mat-icon> Delivery Charges</h3>
+              <div class="fields-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Base charge (₹)</mat-label>
+                  <input matInput type="number" formControlName="deliveryBase" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Per km (₹)</mat-label>
+                  <input matInput type="number" formControlName="deliveryPerKm" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Free above order (₹)</mat-label>
+                  <input matInput type="number" formControlName="deliveryFreeAbove" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Commission & Tax -->
+            <div class="card settings-section">
+              <h3><mat-icon>percent</mat-icon> Commission & Tax</h3>
+              <div class="fields-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Commission (%)</mat-label>
+                  <input matInput type="number" formControlName="commission" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>GST (%)</mat-label>
+                  <input matInput type="number" formControlName="gst" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Order settings -->
+            <div class="card settings-section">
+              <h3><mat-icon>receipt_long</mat-icon> Order Settings</h3>
+              <div class="fields-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Min order amount (₹)</mat-label>
+                  <input matInput type="number" formControlName="minOrderAmount" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Max delivery radius (km)</mat-label>
+                  <input matInput type="number" formControlName="maxDeliveryRadius" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="card settings-section">
+              <h3><mat-icon>notifications</mat-icon> Notifications</h3>
+              <mat-slide-toggle formControlName="emailEnabled" color="primary">
+                Email Notifications
+              </mat-slide-toggle>
+            </div>
+
+            @if (isSuperAdmin()) {
+              <button mat-flat-button color="primary" type="submit"
+                [disabled]="platformForm.invalid || platformSaving()">
+                {{ platformSaving() ? 'Saving…' : 'Save Platform Settings' }}
+              </button>
+            } @else {
+              <p class="read-only-note">
+                <mat-icon>info</mat-icon>
+                Only a superadmin can modify platform settings.
+              </p>
+            }
+
+          </form>
+        }
+
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>

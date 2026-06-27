@@ -1,5 +1,6 @@
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 @import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
 
 html {
   box-sizing: border-box;

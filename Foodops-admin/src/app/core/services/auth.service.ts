@@ -1,27 +1,47 @@
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { tap, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { ApiService } from './api.service';
+import { AdminUser, ApiResponse, LoginResponse } from '../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly tokenKey = 'foodops-admin-token';
-  private readonly refreshTokenKey = 'foodops-admin-refresh-token';
+
+  public readonly currentAdmin = signal<AdminUser | null>(null);
   public readonly isAuthenticated = signal(this.hasToken());
 
-  constructor(private router: Router) {}
+  constructor(private api: ApiService, private router: Router) {}
 
-  login(token: string, refreshToken?: string) {
-    localStorage.setItem(this.tokenKey, token);
-    if (refreshToken) {
-      localStorage.setItem(this.refreshTokenKey, refreshToken);
-    }
-    this.isAuthenticated.set(true);
+  loginAdmin(email: string, password: string): Observable<void> {
+    return this.api
+      .post<ApiResponse<LoginResponse>>('v1/admin/auth/login', { email, password })
+      .pipe(
+        tap((res) => {
+          localStorage.setItem(this.tokenKey, res.data.token);
+          this.currentAdmin.set(res.data.admin);
+          this.isAuthenticated.set(true);
+        }),
+        map(() => void 0)
+      );
+  }
+
+  fetchCurrentAdmin(): Observable<void> {
+    return this.api.get<ApiResponse<AdminUser>>('v1/admin/auth/me').pipe(
+      tap((res) => {
+        this.currentAdmin.set(res.data);
+        this.isAuthenticated.set(true);
+      }),
+      map(() => void 0)
+    );
   }
 
   logout(): void {
     localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
+    this.currentAdmin.set(null);
     this.isAuthenticated.set(false);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/auth/login']);
   }
 
   getToken(): string | null {
