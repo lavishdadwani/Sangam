@@ -1,0 +1,131 @@
+<div class="users-page">
+  <div class="page-header">
+    <h1>Users</h1>
+    <span class="total-badge">{{ pagination().total }} total</span>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-row">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search name, email, mobile</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchControl" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Role</mat-label>
+      <mat-select [formControl]="roleControl">
+        @for (opt of roleOptions; track opt.value) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl">
+        @for (opt of statusOptions; track opt.value) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  }
+
+  <!-- Table -->
+  <div class="table-card">
+    @if (isLoading()) {
+      <div class="spinner-wrap">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="users()">
+
+        <!-- Name + Email -->
+        <ng-container matColumnDef="fullName">
+          <th mat-header-cell *matHeaderCellDef>User</th>
+          <td mat-cell *matCellDef="let u">
+            <div class="user-cell">
+              <span class="user-name">{{ u.fullName }}</span>
+              <span class="user-email">{{ u.email }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Role -->
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Role</th>
+          <td mat-cell *matCellDef="let u">
+            <span class="badge role-{{ u.role }}">{{ u.role }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Mobile -->
+        <ng-container matColumnDef="mobile">
+          <th mat-header-cell *matHeaderCellDef>Mobile</th>
+          <td mat-cell *matCellDef="let u">{{ u.mobile }}</td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let u">
+            <span class="badge status-{{ u.status }}">{{ u.status }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Joined -->
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Joined</th>
+          <td mat-cell *matCellDef="let u">{{ u.createdAt | date: 'dd MMM yyyy' }}</td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let u">
+            <button mat-icon-button [matMenuTriggerFor]="menu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              @if (u.status !== 'active') {
+                <button mat-menu-item (click)="setStatus(u, 'active')">
+                  <mat-icon>check_circle</mat-icon> Activate
+                </button>
+              }
+              @if (u.status !== 'deactivated') {
+                <button mat-menu-item (click)="setStatus(u, 'deactivated')">
+                  <mat-icon>pause_circle</mat-icon> Deactivate
+                </button>
+              }
+              @if (u.status !== 'blocked') {
+                <button mat-menu-item (click)="setStatus(u, 'blocked')">
+                  <mat-icon>block</mat-icon> Block
+                </button>
+              }
+              @if (u.status !== 'banned') {
+                <button mat-menu-item class="danger-item" (click)="setStatus(u, 'banned')">
+                  <mat-icon>gavel</mat-icon> Permanent Ban
+                </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="pagination().total"
+        [pageSize]="pagination().limit"
+        [pageIndex]="pagination().page - 1"
+        [pageSizeOptions]="[10, 25, 50]"
+        (page)="onPageChange($event)"
+      ></mat-paginator>
+    }
+  </div>
+</div>

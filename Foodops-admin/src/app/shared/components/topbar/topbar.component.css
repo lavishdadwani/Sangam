@@ -1,0 +1,41 @@
+:host {
+  width: 100%;
+  display: block;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e3eb;
+}
+.menu-button,
+.signout-button {
+  border: none;
+  background: #2a3876;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.menu-button {
+  display: block;
+}
+.brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1b2960;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 760px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

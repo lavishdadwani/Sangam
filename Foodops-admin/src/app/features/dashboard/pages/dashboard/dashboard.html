@@ -1,0 +1,36 @@
+<div class="dashboard">
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Platform overview at a glance.</p>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-grid">
+      @for (i of [1,2,3,4,5,6,7,8]; track i) {
+        <div class="card skeleton"></div>
+      }
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  }
+
+  @if (!isLoading() && !error()) {
+    <div class="stats-grid">
+      @for (card of cards(); track card.label) {
+        <div class="card">
+          <div class="card-icon" [style.background]="card.color + '18'" [style.color]="card.color">
+            <span class="material-icons">{{ card.icon }}</span>
+          </div>
+          <div class="card-body">
+            <span class="card-label">{{ card.label }}</span>
+            <span class="card-value">
+              @if (card.prefix) { {{ card.prefix }} }{{ card.value | number }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

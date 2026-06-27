@@ -1,0 +1,40 @@
+<div class="tracking-page">
+  <div class="tracking-header">
+    <div>
+      <h1>Live Rider Tracking</h1>
+      <p>Real-time map of all delivery partners.</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-pill online">
+        <span class="dot"></span>
+        {{ onlineCount() }} Online
+      </div>
+      <div class="stat-pill total">
+        {{ riders().length }} Total
+      </div>
+      <button mat-stroked-button (click)="refreshRiders()">
+        <mat-icon>refresh</mat-icon> Refresh
+      </button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  }
+
+  <div class="map-wrapper">
+    @if (isLoading()) {
+      <div class="map-loading">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading riders…</p>
+      </div>
+    }
+    <div #mapContainer class="map-container"></div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="dot online"></span> Online rider</span>
+    <span class="legend-item"><span class="dot offline"></span> Last known location</span>
+    <span class="legend-item"><span class="dot blocked"></span> Suspended / Banned</span>
+  </div>
+</div>

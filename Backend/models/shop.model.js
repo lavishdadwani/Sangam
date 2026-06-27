@@ -36,6 +36,11 @@ const ShopSchema = new Schema({
         type: Boolean,
         default: false
     },
+    status: {
+        type: String,
+        enum: ["pending", "active", "suspended", "rejected"],
+        default: "active",
+    },
    
 },{timestamps:true})
 

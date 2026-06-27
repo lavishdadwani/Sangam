@@ -134,8 +134,19 @@ const TrackOrderPage = () => {
                 </div>
               </div>
 
+              {/* Cancelled state */}
+              {shopOrder.status === "cancelled" && (
+                <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <FaCheckCircle className="text-red-400 text-xl flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-red-700">This order has been cancelled</p>
+                    <p className="text-sm text-red-500 mt-0.5">Please contact support if you were charged.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Delivery Boy Info */}
-              {shopOrder.status !== "delivered" ? (
+              {shopOrder.status !== "delivered" && shopOrder.status !== "cancelled" ? (
                 <>
                   {shopOrder.assignedDeliveryBoy ? (
                     <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 space-y-3">
@@ -189,7 +200,7 @@ const TrackOrderPage = () => {
               )}
 
               {/* Map Tracking */}
-              {shopOrder.assignedDeliveryBoy && shopOrder.status !== "delivered" && (
+              {shopOrder.assignedDeliveryBoy && shopOrder.status !== "delivered" && shopOrder.status !== "cancelled" && (
                 <div className="h-[400px] w-full rounded-2xl overflow-hidden shadow-lg border border-gray-200 transform transition-all duration-300 hover:shadow-xl">
                   <DeliveryBoyTracking
                     data={{

@@ -1,0 +1,145 @@
+<div class="riders-page">
+  <div class="page-header">
+    <h1>Riders</h1>
+    <span class="total-badge">{{ pagination().total }} total</span>
+  </div>
+
+  <div class="filters-row">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search name, email, mobile</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [formControl]="searchControl" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl">
+        @for (opt of statusOptions; track opt.value) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Online</mat-label>
+      <mat-select [formControl]="onlineControl">
+        @for (opt of onlineOptions; track opt.value) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  }
+
+  <div class="table-card">
+    @if (isLoading()) {
+      <div class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div>
+    } @else {
+      <table mat-table [dataSource]="riders()">
+
+        <!-- Online dot -->
+        <ng-container matColumnDef="online">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let r">
+            <span
+              class="online-dot"
+              [class.is-online]="r.isOnline"
+              [matTooltip]="r.isOnline ? 'Online' : 'Offline'"
+            ></span>
+          </td>
+        </ng-container>
+
+        <!-- Name + Email -->
+        <ng-container matColumnDef="fullName">
+          <th mat-header-cell *matHeaderCellDef>Rider</th>
+          <td mat-cell *matCellDef="let r">
+            <a class="rider-link" [routerLink]="['/riders', r._id]">
+              <span class="rider-name">{{ r.fullName }}</span>
+              <span class="rider-email">{{ r.email }}</span>
+            </a>
+          </td>
+        </ng-container>
+
+        <!-- Mobile -->
+        <ng-container matColumnDef="mobile">
+          <th mat-header-cell *matHeaderCellDef>Mobile</th>
+          <td mat-cell *matCellDef="let r">{{ r.mobile }}</td>
+        </ng-container>
+
+        <!-- Location -->
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef>City</th>
+          <td mat-cell *matCellDef="let r">{{ r.location?.city ?? '—' }}</td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="badge status-{{ r.status }}">{{ r.status }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Approval -->
+        <ng-container matColumnDef="approved">
+          <th mat-header-cell *matHeaderCellDef>Approved</th>
+          <td mat-cell *matCellDef="let r">
+            <span class="badge" [class.approved]="r.isApproved" [class.pending]="!r.isApproved">
+              {{ r.isApproved ? 'Approved' : 'Pending' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let r">
+            <button mat-icon-button [matMenuTriggerFor]="menu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="toggleApproval(r)">
+                <mat-icon>{{ r.isApproved ? 'cancel' : 'verified' }}</mat-icon>
+                {{ r.isApproved ? 'Revoke Approval' : 'Approve Rider' }}
+              </button>
+              @if (r.status !== 'active') {
+                <button mat-menu-item (click)="setStatus(r, 'active')">
+                  <mat-icon>check_circle</mat-icon> Activate
+                </button>
+              }
+              @if (r.status !== 'deactivated') {
+                <button mat-menu-item (click)="setStatus(r, 'deactivated')">
+                  <mat-icon>pause_circle</mat-icon> Deactivate
+                </button>
+              }
+              @if (r.status !== 'blocked') {
+                <button mat-menu-item (click)="setStatus(r, 'blocked')">
+                  <mat-icon>block</mat-icon> Suspend
+                </button>
+              }
+              @if (r.status !== 'banned') {
+                <button mat-menu-item class="danger-item" (click)="setStatus(r, 'banned')">
+                  <mat-icon>gavel</mat-icon> Permanent Ban
+                </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="pagination().total"
+        [pageSize]="pagination().limit"
+        [pageIndex]="pagination().page - 1"
+        [pageSizeOptions]="[10, 25, 50]"
+        (page)="onPageChange($event)"
+      ></mat-paginator>
+    }
+  </div>
+</div>

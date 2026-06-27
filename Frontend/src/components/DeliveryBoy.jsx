@@ -8,7 +8,7 @@ import DeliveryBoyTracking from "./DeliveryBoyTracking";
 import AnimatedCard from "./AnimatedCard";
 import LoadingMessage from "./LoadingMessage";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { FaMapMarkerAlt, FaShoppingBag, FaRupeeSign, FaCheckCircle, FaClock, FaTruck, FaUser, FaStore } from "react-icons/fa";
+import { FaMapMarkerAlt, FaShoppingBag, FaRupeeSign, FaCheckCircle, FaClock, FaTruck, FaUser, FaStore, FaBan, FaHourglassHalf } from "react-icons/fa";
 import { MdDeliveryDining, MdLocationOn, MdAttachMoney } from "react-icons/md";
 import { HiOutlineClipboardCheck } from "react-icons/hi";
 const DeliveryBoy = () => {
@@ -99,7 +99,16 @@ const DeliveryBoy = () => {
     getCurrentOrder();
   }, [userData]);
 
+  const dismissCancelledOrder = () => {
+    setCurrentOrder(null);
+    getAssignment();
+  };
+
   const acceptOrder = async (assignmentId) => {
+    if (userData.isApproved === false) {
+      dispatch(openSnackbar("Your account is pending admin approval.", "error"));
+      return;
+    }
     try {
       setAcceptingOrderId(assignmentId);
       const result = await orderAPI.acceptOrder(assignmentId);
@@ -261,6 +270,18 @@ const getLoadingMessage = () => {
       
       <Nav userData={userData} />
       <div className="w-full max-w-[900px] flex flex-col gap-6 items-center mt-[80px] px-4">
+
+        {/* Approval pending gate */}
+        {userData.isApproved === false && (
+          <div className="w-full bg-yellow-50 border border-yellow-200 rounded-2xl p-8 flex flex-col items-center text-center gap-4 shadow">
+            <FaHourglassHalf className="text-yellow-500 text-5xl" />
+            <h2 className="text-xl font-bold text-yellow-800">Account Pending Approval</h2>
+            <p className="text-yellow-700 max-w-sm">
+              Your delivery partner account is under review. An admin will approve it shortly.
+              You'll be able to accept deliveries once approved.
+            </p>
+          </div>
+        )}
         {/* Welcome Card */}
         <AnimatedCard index={0} delay={100} className="w-full">
           <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row justify-between items-center gap-4 border border-orange-100">
@@ -340,8 +361,27 @@ const getLoadingMessage = () => {
           </div>
         </AnimatedCard>
 
+        {/* Cancelled order state */}
+        {currentOrder?.shopOrder?.status === 'cancelled' && (
+          <AnimatedCard index={2} delay={100} className="w-full">
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 flex flex-col items-center text-center gap-4">
+              <FaBan className="text-red-400 text-4xl" />
+              <div>
+                <h2 className="text-lg font-bold text-red-700">Order Cancelled</h2>
+                <p className="text-sm text-red-500 mt-1">This order was cancelled by the platform. No action needed.</p>
+              </div>
+              <button
+                onClick={dismissCancelledOrder}
+                className="bg-red-500 text-white px-6 py-2 rounded-full text-sm font-semibold hover:bg-red-600 transition-colors"
+              >
+                Dismiss & See New Orders
+              </button>
+            </div>
+          </AnimatedCard>
+        )}
+
         {/* Available Orders or Current Order */}
-        {!currentOrder ? (
+        {currentOrder?.shopOrder?.status !== 'cancelled' && (!currentOrder ? (
           <AnimatedCard index={2} delay={100} className="w-full">
             <div className="bg-white rounded-2xl p-6 shadow-lg w-full border border-orange-100">
               <div className="flex items-center gap-2 mb-6">
@@ -507,7 +547,7 @@ const getLoadingMessage = () => {
               )}
             </div>
           </AnimatedCard>
-        )}
+        ))}
       </div>
     </div>
   );

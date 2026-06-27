@@ -1,0 +1,138 @@
+<div class="detail-page">
+  <div class="back-row">
+    <a routerLink="/complaints" mat-button><mat-icon>arrow_back</mat-icon> Back to Complaints</a>
+  </div>
+
+  @if (isLoading()) { <div class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div> }
+  @if (error()) { <div class="error-banner">{{ error() }}</div> }
+
+  @if (!isLoading() && complaint()) {
+    <div class="detail-grid">
+
+      <!-- Left: complaint info -->
+      <div class="left-col">
+
+        <!-- Header card -->
+        <div class="card">
+          <div class="complaint-header">
+            <div class="badges-row">
+              <span class="badge cat-{{ complaint()!.category }}">{{ complaint()!.category }}</span>
+              <span class="badge status-{{ complaint()!.status }}">{{ complaint()!.status | titlecase }}</span>
+            </div>
+            <h2>{{ complaint()!.title }}</h2>
+            <p class="submitted">Submitted {{ complaint()!.createdAt | date:'dd MMM yyyy, hh:mm a' }}</p>
+          </div>
+          <p class="description">{{ complaint()!.description }}</p>
+        </div>
+
+        <!-- Raised by -->
+        <div class="card info-card">
+          <h3><mat-icon>person</mat-icon> Raised By</h3>
+          @if (complaint()!.raisedBy) {
+            <div class="info-row"><mat-icon>badge</mat-icon><span>{{ complaint()!.raisedBy!.fullName }}</span></div>
+            <div class="info-row"><mat-icon>email</mat-icon><span>{{ complaint()!.raisedBy!.email }}</span></div>
+            @if (complaint()!.raisedBy!.mobile) {
+              <div class="info-row"><mat-icon>phone</mat-icon><span>{{ complaint()!.raisedBy!.mobile }}</span></div>
+            }
+            <div class="info-row">
+              <mat-icon>manage_accounts</mat-icon>
+              <span class="badge role-badge">{{ complaint()!.raisedBy!.role }}</span>
+            </div>
+          } @else {
+            <p class="muted">User data unavailable</p>
+          }
+        </div>
+
+        <!-- Related order -->
+        @if (complaint()!.orderId) {
+          <div class="card info-card">
+            <h3><mat-icon>receipt_long</mat-icon> Related Order</h3>
+            <div class="info-row"><mat-icon>tag</mat-icon>
+              <span class="mono">#{{ complaint()!.orderId!._id | slice:0:12 }}…</span>
+            </div>
+            <div class="info-row"><mat-icon>currency_rupee</mat-icon>
+              <span>₹{{ complaint()!.orderId!.totalAmount | number }}</span>
+            </div>
+            <div class="info-row"><mat-icon>calendar_today</mat-icon>
+              <span>{{ complaint()!.orderId!.createdAt | date:'dd MMM yyyy' }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Resolution -->
+        @if (complaint()!.resolution) {
+          <div class="card resolution-card">
+            <h3><mat-icon>check_circle</mat-icon> Resolution</h3>
+            <p>{{ complaint()!.resolution }}</p>
+            @if (complaint()!.resolvedAt) {
+              <p class="resolved-at">Resolved {{ complaint()!.resolvedAt | date:'dd MMM yyyy, hh:mm a' }}</p>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Right: actions -->
+      <div class="right-col">
+
+        <!-- Assign -->
+        <div class="card action-card">
+          <h3><mat-icon>assignment_ind</mat-icon> Assign To Staff</h3>
+          <mat-form-field appearance="outline" class="full-field">
+            <mat-label>Select Admin</mat-label>
+            <mat-select [formControl]="assignControl">
+              @for (a of adminList(); track a._id) {
+                <mat-option [value]="a._id">{{ a.fullName }} ({{ a.role }})</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          @if (complaint()!.assignedTo) {
+            <p class="current-assignee">
+              Currently: <strong>{{ complaint()!.assignedTo!.fullName }}</strong>
+            </p>
+          }
+          <button mat-flat-button color="primary" (click)="assign()"
+            [disabled]="!assignControl.value || assigning()">
+            {{ assigning() ? 'Assigning…' : 'Assign' }}
+          </button>
+        </div>
+
+        <!-- Status -->
+        <div class="card action-card">
+          <h3><mat-icon>swap_horiz</mat-icon> Update Status</h3>
+          <mat-form-field appearance="outline" class="full-field">
+            <mat-label>Status</mat-label>
+            <mat-select [formControl]="statusControl">
+              @for (s of statusOptions; track s.value) {
+                <mat-option [value]="s.value">{{ s.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button mat-flat-button color="accent" (click)="updateStatus()"
+            [disabled]="statusControl.value === complaint()!.status || updatingStatus()">
+            {{ updatingStatus() ? 'Updating…' : 'Update Status' }}
+          </button>
+        </div>
+
+        <!-- Resolve -->
+        @if (complaint()!.status !== 'resolved' && complaint()!.status !== 'closed') {
+          <div class="card action-card">
+            <h3><mat-icon>done_all</mat-icon> Resolve Complaint</h3>
+            <mat-form-field appearance="outline" class="full-field">
+              <mat-label>Resolution note</mat-label>
+              <textarea matInput [formControl]="resolutionControl" rows="4"
+                placeholder="Describe what action was taken…"></textarea>
+              @if (resolutionControl.invalid && resolutionControl.touched) {
+                <mat-error>Resolution note is required</mat-error>
+              }
+            </mat-form-field>
+            <button mat-flat-button color="primary" (click)="resolve()"
+              [disabled]="resolutionControl.invalid || resolving()">
+              {{ resolving() ? 'Resolving…' : 'Mark as Resolved' }}
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  }
+</div>

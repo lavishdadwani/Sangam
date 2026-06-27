@@ -1,0 +1,67 @@
+.settings-page { padding: 24px; }
+
+.page-header { margin-bottom: 24px; }
+.page-header h1 { margin: 0 0 4px; font-size: 1.6rem; color: #1b2960; }
+.page-header p  { margin: 0; color: #6b7280; font-size: 0.88rem; }
+
+.tab-content { padding: 24px 0; display: flex; flex-direction: column; gap: 20px; }
+
+.spinner-wrap { display: grid; place-items: center; height: 160px; }
+
+/* Card */
+.card {
+  background: #fff; border-radius: 12px;
+  padding: 24px; box-shadow: 0 1px 4px rgba(17,24,39,.08);
+}
+
+/* Profile card */
+.profile-card { display: flex; flex-direction: column; gap: 24px; }
+
+.avatar-row { display: flex; align-items: center; gap: 20px; }
+.avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: #e0e7ff; color: #4f46e5;
+  font-size: 1.8rem; font-weight: 700;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.avatar-row h2  { margin: 0 0 4px; font-size: 1.2rem; color: #111827; }
+.avatar-row .email { margin: 0 0 6px; color: #6b7280; font-size: 0.88rem; }
+
+.info-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;
+}
+.info-item { display: flex; align-items: flex-start; gap: 10px; }
+.info-item mat-icon { color: #9ca3af; font-size: 20px; margin-top: 2px; }
+.info-label { margin: 0 0 2px; font-size: 0.72rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .04em; }
+.info-value { margin: 0; font-size: 0.88rem; color: #111827; }
+
+/* Badges */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize; }
+.role-badge   { background: #e0e7ff; color: #3730a3; }
+.active   { background: #d1fae5; color: #065f46; }
+.inactive { background: #fee2e2; color: #991b1b; }
+
+/* Form card */
+.form-card h3 { margin: 0 0 16px; font-size: 0.95rem; color: #374151; }
+.full-field   { width: 100%; margin-bottom: 4px; }
+
+/* Platform settings */
+.settings-section h3 {
+  display: flex; align-items: center; gap: 6px;
+  margin: 0 0 16px; font-size: 0.95rem; color: #374151;
+}
+.settings-section h3 mat-icon { font-size: 18px; color: #6b7280; }
+
+.fields-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.fields-row mat-form-field { flex: 1 1 160px; }
+
+.read-only-note {
+  display: flex; align-items: center; gap: 6px;
+  color: #92400e; background: #fef3c7;
+  padding: 10px 14px; border-radius: 8px; font-size: 0.87rem;
+}
+.read-only-note mat-icon { font-size: 18px; }
+
+/* Snackbar */
+:root .snack-success .mdc-snackbar__surface { background: #16a34a !important; }
+:root .snack-error   .mdc-snackbar__surface { background: #dc2626 !important; }

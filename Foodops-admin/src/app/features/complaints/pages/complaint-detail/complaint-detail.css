@@ -1,0 +1,53 @@
+.detail-page { padding: 24px; }
+.back-row { margin-bottom: 20px; }
+.spinner-wrap { display: grid; place-items: center; height: 200px; }
+.error-banner { padding: 10px 14px; border-radius: 8px; background: #fef2f2; color: #b91c1c; font-size: 0.875rem; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 860px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.left-col, .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+.card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(17,24,39,.08); }
+
+/* Complaint header */
+.badges-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.complaint-header h2 { margin: 0 0 4px; font-size: 1.15rem; color: #111827; }
+.submitted { margin: 0 0 14px; font-size: 0.8rem; color: #9ca3af; }
+.description { margin: 0; color: #374151; line-height: 1.6; font-size: 0.9rem; }
+
+/* Info card */
+.info-card h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 14px; font-size: 0.9rem; color: #374151; }
+.info-row { display: flex; align-items: center; gap: 8px; font-size: 0.87rem; color: #374151; margin-bottom: 8px; }
+.info-row mat-icon { font-size: 16px; color: #9ca3af; }
+.mono { font-family: monospace; font-size: 0.85rem; }
+
+/* Resolution */
+.resolution-card h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; color: #065f46; font-size: 0.9rem; }
+.resolution-card p { margin: 0 0 6px; color: #374151; line-height: 1.6; font-size: 0.9rem; }
+.resolved-at { font-size: 0.78rem; color: #9ca3af; }
+
+/* Action cards */
+.action-card h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 14px; font-size: 0.88rem; color: #374151; font-weight: 600; }
+.action-card h3 mat-icon { font-size: 18px; color: #6b7280; }
+.full-field { width: 100%; }
+.current-assignee { margin: 0 0 10px; font-size: 0.82rem; color: #6b7280; }
+
+/* Badges */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; text-transform: capitalize; }
+.role-badge     { background: #e0e7ff; color: #3730a3; }
+.cat-order      { background: #dbeafe; color: #1e40af; }
+.cat-restaurant { background: #fef3c7; color: #92400e; }
+.cat-rider      { background: #d1fae5; color: #065f46; }
+.cat-payment    { background: #fce7f3; color: #9d174d; }
+.cat-other      { background: #f3f4f6; color: #6b7280; }
+.status-open        { background: #fee2e2; color: #991b1b; }
+.status-in_progress { background: #fef9c3; color: #854d0e; }
+.status-resolved    { background: #d1fae5; color: #065f46; }
+.status-closed      { background: #f3f4f6; color: #6b7280; }
+.muted { color: #9ca3af; font-style: italic; }

@@ -1,0 +1,81 @@
+.detail-page { padding: 24px; }
+.back-row { margin-bottom: 20px; }
+
+.spinner-wrap { display: grid; place-items: center; height: 200px; }
+.error-banner {
+  padding: 10px 14px; border-radius: 8px;
+  background: #fef2f2; color: #b91c1c; font-size: 0.875rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .detail-grid { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: #fff; border-radius: 12px;
+  padding: 24px; box-shadow: 0 1px 4px rgba(17,24,39,.08);
+}
+
+/* Profile card */
+.profile-header {
+  display: flex; align-items: flex-start; gap: 16px;
+  margin-bottom: 20px; position: relative;
+}
+
+.avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #e0e7ff; color: #4f46e5;
+  font-size: 1.5rem; font-weight: 700;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+
+.profile-header h2 { margin: 0 0 6px; color: #111827; font-size: 1.1rem; }
+.action-btn { margin-left: auto; }
+
+.info-list { display: flex; flex-direction: column; gap: 12px; }
+.info-row  { display: flex; align-items: center; gap: 10px; color: #374151; font-size: 0.9rem; }
+.info-row mat-icon { font-size: 18px; color: #9ca3af; }
+.online-text { color: #16a34a; font-weight: 600; }
+
+/* Badges */
+.badge {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 600; text-transform: capitalize; margin-right: 4px;
+}
+.status-active      { background: #d1fae5; color: #065f46; }
+.status-deactivated { background: #f3f4f6; color: #6b7280; }
+.status-blocked     { background: #fef3c7; color: #92400e; }
+.status-banned      { background: #fee2e2; color: #991b1b; }
+.approved { background: #d1fae5; color: #065f46; }
+.pending  { background: #fef9c3; color: #854d0e; }
+
+/* Stats column */
+.stats-col { display: flex; flex-direction: column; gap: 16px; }
+
+.stat-card {
+  display: flex; align-items: center; gap: 16px;
+  background: #fff; border-radius: 12px; padding: 20px;
+  box-shadow: 0 1px 4px rgba(17,24,39,.08);
+}
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 10px;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.stat-label { margin: 0 0 4px; font-size: 0.8rem; color: #6b7280; font-weight: 500; }
+.stat-value { margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827; }
+
+/* Location card */
+.location-card h3 {
+  display: flex; align-items: center; gap: 6px;
+  margin: 0 0 12px; font-size: 0.95rem; color: #374151;
+}
+.location-card p { margin: 4px 0; color: #111827; font-size: 0.9rem; }
+.coords { font-size: 0.78rem; color: #9ca3af; }
+.muted  { color: #9ca3af; font-style: italic; }

@@ -1,0 +1,121 @@
+<div class="detail-page">
+  <div class="back-row">
+    <a routerLink="/riders" mat-button>
+      <mat-icon>arrow_back</mat-icon> Back to Riders
+    </a>
+  </div>
+
+  @if (isLoading()) {
+    <div class="spinner-wrap"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+
+  @if (error()) {
+    <div class="error-banner">{{ error() }}</div>
+  }
+
+  @if (!isLoading() && rider()) {
+    <div class="detail-grid">
+
+      <!-- Profile card -->
+      <div class="card profile-card">
+        <div class="profile-header">
+          <div class="avatar">{{ rider()!.fullName[0] }}</div>
+          <div>
+            <h2>{{ rider()!.fullName }}</h2>
+            <span class="badge status-{{ rider()!.status }}">{{ rider()!.status }}</span>
+            <span class="badge" [class.approved]="rider()!.isApproved" [class.pending]="!rider()!.isApproved">
+              {{ rider()!.isApproved ? 'Approved' : 'Pending Approval' }}
+            </span>
+          </div>
+          <button mat-icon-button [matMenuTriggerFor]="actionMenu" class="action-btn">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #actionMenu="matMenu">
+            <button mat-menu-item (click)="toggleApproval()">
+              <mat-icon>{{ rider()!.isApproved ? 'cancel' : 'verified' }}</mat-icon>
+              {{ rider()!.isApproved ? 'Revoke Approval' : 'Approve' }}
+            </button>
+            @if (rider()!.status !== 'active') {
+              <button mat-menu-item (click)="setStatus('active')">
+                <mat-icon>check_circle</mat-icon> Activate
+              </button>
+            }
+            @if (rider()!.status !== 'deactivated') {
+              <button mat-menu-item (click)="setStatus('deactivated')">
+                <mat-icon>pause_circle</mat-icon> Deactivate
+              </button>
+            }
+            @if (rider()!.status !== 'blocked') {
+              <button mat-menu-item (click)="setStatus('blocked')">
+                <mat-icon>block</mat-icon> Suspend
+              </button>
+            }
+            @if (rider()!.status !== 'banned') {
+              <button mat-menu-item (click)="setStatus('banned')">
+                <mat-icon>gavel</mat-icon> Permanent Ban
+              </button>
+            }
+          </mat-menu>
+        </div>
+
+        <div class="info-list">
+          <div class="info-row">
+            <mat-icon>email</mat-icon>
+            <span>{{ rider()!.email }}</span>
+          </div>
+          <div class="info-row">
+            <mat-icon>phone</mat-icon>
+            <span>{{ rider()!.mobile }}</span>
+          </div>
+          <div class="info-row">
+            <mat-icon>circle</mat-icon>
+            <span [class.online-text]="rider()!.isOnline">
+              {{ rider()!.isOnline ? 'Online now' : 'Offline' }}
+            </span>
+          </div>
+          <div class="info-row">
+            <mat-icon>calendar_today</mat-icon>
+            <span>Joined {{ rider()!.createdAt | date: 'dd MMM yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats cards -->
+      <div class="stats-col">
+        <div class="stat-card">
+          <span class="stat-icon" style="background:#e0e7ff; color:#4f46e5">
+            <mat-icon>delivery_dining</mat-icon>
+          </span>
+          <div>
+            <p class="stat-label">Total Deliveries</p>
+            <p class="stat-value">{{ stats()?.totalDeliveries ?? 0 | number }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-icon" style="background:#d1fae5; color:#059669">
+            <mat-icon>currency_rupee</mat-icon>
+          </span>
+          <div>
+            <p class="stat-label">Total Order Value Delivered</p>
+            <p class="stat-value">₹{{ stats()?.totalOrderValue ?? 0 | number }}</p>
+          </div>
+        </div>
+
+        <!-- Last known location -->
+        <div class="card location-card">
+          <h3><mat-icon>location_on</mat-icon> Last Known Location</h3>
+          @if (rider()!.location?.city) {
+            <p>{{ rider()!.location.address ?? rider()!.location.city }}</p>
+            <p class="coords">
+              {{ rider()!.location.coordinates[1] }}, {{ rider()!.location.coordinates[0] }}
+            </p>
+          } @else {
+            <p class="muted">No location data</p>
+          }
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

@@ -99,6 +99,16 @@ export const signIn = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid password." });
 
+    // Block sign-in for non-active accounts
+    const statusMessages = {
+      deactivated: "Your account has been temporarily deactivated. Please contact support.",
+      blocked: "Your account has been blocked. Please contact support.",
+      banned: "Your account has been permanently banned.",
+    };
+    if (user.status && statusMessages[user.status]) {
+      return res.status(403).json({ message: statusMessages[user.status] });
+    }
+
     const token = await generateToken(user._id);
     res.cookie("token", token, {
       secure: process.env.NODE_ENV === "production",
@@ -207,6 +217,15 @@ export const googleAuth = async (req, res) => {
         role,
         signInWith: "Google",
       });
+    } else {
+      const statusMessages = {
+        deactivated: "Your account has been temporarily deactivated. Please contact support.",
+        blocked: "Your account has been blocked. Please contact support.",
+        banned: "Your account has been permanently banned.",
+      };
+      if (user.status && statusMessages[user.status]) {
+        return res.status(403).json({ message: statusMessages[user.status] });
+      }
     }
     const token = await generateToken(user._id);
     res.cookie("token", token, {
