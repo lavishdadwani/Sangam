@@ -88,6 +88,12 @@ export const socketHandler = async (io) => {
             }
         });
 
+        // Admin panel joins this room to receive all rider location updates
+        socket.on("adminJoinTracking", () => {
+            socket.join("admin:tracking");
+            console.log(chalk.magenta(`🗺  Admin joined tracking room: ${socket.id}`));
+        });
+
         socket.on("joinOrderRoom", async ({orderId}) => {
             try {
                 if (!orderId) {
@@ -203,6 +209,14 @@ export const socketHandler = async (io) => {
                         //     }
                         // }
                         
+                        // Broadcast to admin tracking room regardless of order assignments
+                        io.to("admin:tracking").emit("riderLocationUpdate", {
+                            userId,
+                            latitude,
+                            longitude,
+                            timestamp: locationData.timestamp,
+                        });
+
                         console.log(chalk.blue(`🔍 Delivery boy ${userId} is assigned to orders:`, orderIds || 'none'));
                         
                         // Broadcast to each order room

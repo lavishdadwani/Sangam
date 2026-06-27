@@ -56,6 +56,15 @@ const UserSchema = new Schema(
         type: Boolean,
         default: false
     },
+    status: {
+      type: String,
+      enum: ["active", "deactivated", "blocked", "banned"],
+      default: "active",
+    },
+    isApproved: {
+      type: Boolean,
+      default: true,
+    },
     location: {
       type: {
         type: String,

@@ -15,20 +15,38 @@ import { Server } from "socket.io";
 import { socketHandler } from "./socket.js";
 import { initRedis, closeRedis } from "./redis.js";
 import chatbotRoutes from "./chatbot/chatbot.routes.js"
-const port = process.env.PORT || 5000;
+import adminAuthRoutes from "./routes/admin/admin.auth.routes.js"
+import adminStatsRoutes from "./routes/admin/admin.stats.routes.js"
+import adminUsersRoutes from "./routes/admin/admin.users.routes.js"
+import adminRidersRoutes from "./routes/admin/admin.riders.routes.js"
+import adminRestaurantsRoutes from "./routes/admin/admin.restaurants.routes.js"
+import adminOrdersRoutes from "./routes/admin/admin.orders.routes.js"
+import adminFleetRoutes from "./routes/admin/admin.fleet.routes.js"
+import adminAnalyticsRoutes from "./routes/admin/admin.analytics.routes.js"
+import adminSettingsRoutes from "./routes/admin/admin.settings.routes.js"
+import adminComplaintsRoutes from "./routes/admin/admin.complaints.routes.js"
+import adminNotificationsRoutes from "./routes/admin/admin.notifications.routes.js"
+import complaintRoutes from "./routes/complaint.routes.js"
+const port = process.env.PORT || 8000;
 const app = express();
 const server = http.createServer(app)
 
-const io = new Server(server,{
-    cors:{
-        origin: process.env.CLIENT_URL || "http://localhost:5173",
-        credentials: true,
-      }
-})
-// CORS configuration - use environment variable if available
+// All clients allowed to connect — add prod URLs via env vars
+const allowedOrigins = [
+  process.env.CLIENT_URL  || "http://localhost:5173",  // React user app
+  process.env.ADMIN_URL   || "http://localhost:4200",  // Angular admin
+];
+
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -91,6 +109,18 @@ app.use("/api/auth/shop", shopRouter);
 app.use("/api/auth/item", itemRouter);
 app.use("/api/auth/order", orderRouter);
 app.use("/api/auth/chat", chatbotRoutes);
+app.use("/api/v1/admin/auth", adminAuthRoutes);
+app.use("/api/v1/admin/stats", adminStatsRoutes);
+app.use("/api/v1/admin/users", adminUsersRoutes);
+app.use("/api/v1/admin/riders", adminRidersRoutes);
+app.use("/api/v1/admin/restaurants", adminRestaurantsRoutes);
+app.use("/api/v1/admin/orders", adminOrdersRoutes);
+app.use("/api/v1/admin/fleet", adminFleetRoutes);
+app.use("/api/v1/admin/analytics", adminAnalyticsRoutes);
+app.use("/api/v1/admin/settings", adminSettingsRoutes);
+app.use("/api/v1/admin/complaints", adminComplaintsRoutes);
+app.use("/api/v1/admin/notifications", adminNotificationsRoutes);
+app.use("/api/auth/complaints", complaintRoutes);
 app.get("/", async (req, res) => {
   res.status(200).json({ message: "Server is running" });
 });
