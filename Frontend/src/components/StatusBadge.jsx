@@ -1,5 +1,5 @@
 import React from "react";
-import { FaCheckCircle, FaClock, FaTruck, FaBox } from "react-icons/fa";
+import { FaCheckCircle, FaClock, FaTruck, FaBox, FaBan } from "react-icons/fa";
 import { MdPending } from "react-icons/md";
 
 const StatusBadge = ({ status, showIcon = true, className = "" }) => {
@@ -39,6 +39,14 @@ const StatusBadge = ({ status, showIcon = true, className = "" }) => {
           bgClass: "bg-orange-50",
           borderClass: "border-orange-200",
           animationStyle: { animationDuration: '3s' },
+        };
+      case "cancelled":
+        return {
+          icon: FaBan,
+          iconClass: "text-red-500",
+          textClass: "text-red-500",
+          bgClass: "bg-red-50",
+          borderClass: "border-red-200",
         };
       default:
         return {

@@ -18,6 +18,7 @@ import CartPage from './pages/CartPage'
 import CheckOut from './pages/CheckOut'
 import OrderPlaced from './pages/OrderPlaced'
 import MyOrders from './pages/MyOrders'
+import MyComplaints from './pages/MyComplaints'
 import useGetMyOrders from './hooks/useGetMyOrders'
 import useUpdateLocation from './hooks/useUpdateLocation'
 import TrackOrderPage from './pages/TrackOrderPage'
@@ -119,6 +120,10 @@ function App() {
         <Route
           path="/my-orders"
           element={userData ? <MyOrders /> : <Navigate to="/signIn" />}
+        />
+        <Route
+          path="/my-complaints"
+          element={userData ? <MyComplaints /> : <Navigate to="/signIn" />}
         />
         <Route
           path="/track-order/:orderId"

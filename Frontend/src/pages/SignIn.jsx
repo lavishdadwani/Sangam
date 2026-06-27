@@ -14,10 +14,13 @@ import InputPassword from "../components/InputPassword";
 import ButtonSquare from "../components/ButtonSquare";
 import { emailRegex } from "../../utils/helpers";
 
+const ACCOUNT_STATUS_MESSAGES = ["deactivated", "blocked", "banned", "contact support"];
+
 function SignIn() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const [loading, setLoading] = React.useState(false);
+  const [accountAlert, setAccountAlert] = React.useState("");
   
   const primaryColor = "#ff4d2d";
   const bgColor = "#fff9f6";
@@ -50,9 +53,14 @@ function SignIn() {
         navigate("/")
       } else {
         const errorMessage = result.data?.message || "Failed to sign in"
-        
-        // Handle specific backend errors
-        if (errorMessage.toLowerCase().includes("email")) {
+
+        // Show persistent alert for account status issues
+        const isStatusIssue = ACCOUNT_STATUS_MESSAGES.some((kw) =>
+          errorMessage.toLowerCase().includes(kw)
+        );
+        if (isStatusIssue) {
+          setAccountAlert(errorMessage);
+        } else if (errorMessage.toLowerCase().includes("email")) {
           setError("email", { type: "server", message: errorMessage })
         } else if (errorMessage.toLowerCase().includes("password")) {
           setError("password", { type: "server", message: errorMessage })
@@ -88,7 +96,14 @@ function SignIn() {
         navigate("/")
       } else {
         const errorMessage = data.data?.message || "Failed to sign in with Google"
-        dispatch(openSnackbar(errorMessage, "error"))
+        const isStatusIssue = ACCOUNT_STATUS_MESSAGES.some((kw) =>
+          errorMessage.toLowerCase().includes(kw)
+        );
+        if (isStatusIssue) {
+          setAccountAlert(errorMessage);
+        } else {
+          dispatch(openSnackbar(errorMessage, "error"))
+        }
       }
     } catch (err) {
       console.error('Google authentication error:', err)
@@ -135,6 +150,13 @@ function SignIn() {
         <p className="text-gray-600 mb-8">
           Sign in to get instant groceries
         </p>
+
+        {accountAlert && (
+          <div className="mb-4 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <span className="text-red-500 text-xl flex-shrink-0">⚠️</span>
+            <p className="text-sm text-red-700 font-medium">{accountAlert}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Email */}
