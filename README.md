@@ -1,4 +1,4 @@
-# Sangam Delivery (KT Mart)
+# Food Delivery (Mini Mart)
 
 A full-stack food delivery platform with role-based dashboards for **customers**, **restaurant owners**, and **delivery partners**, plus a dedicated **FoodOps Admin** panel for platform administrators. Users can browse local restaurants, place multi-shop orders, pay via Razorpay, track deliveries in real time on a map, and get help from an AI chatbot powered by Google Gemini.
 
@@ -45,7 +45,7 @@ The **Backend** is an Express 5 API with MongoDB, Redis, Socket.IO, and integrat
 - Email/password sign-up and sign-in with JWT stored in HTTP-only cookies
 - Google OAuth via Firebase
 - Forgot password flow with email OTP verification
-- Role selection at registration: `user`, `owner`, or `deliveryBoy`
+- Role selection at registration: `user`, `Restaurant Owner`, or `deliveryBoy`
 - Location stored per user (GeoJSON point) with city-based discovery
 - Account status enforcement: `active`, `deactivated`, `blocked`, `banned` — blocked/banned users cannot sign in
 - Delivery boys require admin approval (`isApproved`) before they can accept orders
@@ -170,7 +170,7 @@ flowchart TB
         B --> CP[Submit Complaint]
     end
 
-    subgraph OwnerFlow
+    subgraph Restaurant OwnerFlow
         B --> I[Create Shop & Menu]
         I --> J[Receive Orders]
         J --> K[Update Status: preparing / awaiting pickup]
@@ -532,7 +532,7 @@ Base URL: `{SERVER_URL}/api/auth`
 | POST | `/verify-payment` | Yes | Confirm Razorpay payment |
 | GET | `/orders` | Yes | List orders (role-aware) |
 | GET | `/order/:orderId` | Yes | Order details |
-| POST | `/update-status/:orderId/:shopId` | Yes | Owner updates shop order status |
+| POST | `/update-status/:orderId/:shopId` | Yes | Restaurant Owner updates shop order status |
 | GET | `/get-assignments` | Yes | Delivery assignments |
 | GET | `/accept-order/:assignmentId` | Yes | Accept delivery (requires isApproved) |
 | GET | `/current-order` | Yes | Active delivery order |
@@ -677,8 +677,8 @@ Connect to the same host as `VITE_SERVER_URL` (or `socketUrl` in admin) with `wi
 | Status | Set by | Meaning |
 |--------|--------|---------|
 | `pending` | System | Order placed |
-| `preparing` | Owner | Restaurant preparing food |
-| `awaiting pickup` | Owner | Ready for delivery partner |
+| `preparing` | Restaurant Owner | Restaurant preparing food |
+| `awaiting pickup` | Restaurant Owner | Ready for delivery partner |
 | `out for delivery` | System / delivery flow | En route |
 | `delivered` | OTP verification | Completed |
 | `cancelled` | Admin | Force-cancelled by platform admin |
